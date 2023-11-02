@@ -20,7 +20,7 @@ git clone https://github.com/georgeaidinis/DLICV
 
 ## Usage
 
-### As a python package
+### Import as a python package
 
 ```python
 from dlicv import compute_volume
