@@ -23,7 +23,7 @@ git clone https://github.com/georgeaidinis/DLICV
 ### Import as a python package
 
 ```python
-from dlicv import compute_volume
+from dlicv.compute_icv import compute_volume
 
 # Assuming your nifti file is named 'input.nii.gz'
 volume_image = compute_volume("input.nii.gz")

@@ -21,7 +21,15 @@ def main():
         '-o', '--output', 
         type=str, 
         required=True, 
-        help='Path where the output nifti image or directory to save output images will be saved.'
+        help='Path where the output nifti image or directory to save output images will be saved. Expecting an nnUNet model.'
+    )
+    
+    parser.add_argument(
+        '-m', '--model', 
+        type=str, 
+        required=False,
+        default="default",
+        help='Path where the model to be used is stored.'
     )
 
     parser.add_argument(
@@ -38,17 +46,17 @@ def main():
     if input_path.is_dir():
         # Process each nifti image in the directory
         for file_path in input_path.glob('*.nii.gz'):
-            process_image(file_path, args.output)
+            process_image(file_path, args.output, args.model)
     elif input_path.is_file():
         # Process the single file
-        process_image(input_path, args.output)
+        process_image(input_path, args.output, args.model)
     else:
         print(f"The input path {args.input} is not valid.")
         sys.exit(1)
 
-def process_image(input_file, output_base):
+def process_image(input_file, output_base, model):
     # Calculate intracranial volume
-    output_volume = compute_volume(input_file)
+    output_volume = compute_volume(input_file, model)
     
     # Determine the output file path
     if Path(output_base).is_dir():
