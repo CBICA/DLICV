@@ -181,3 +181,4 @@ Temporary Items
 # Make sure that no data is ever uploaded:
 *.nii
 *.nii.gz
+temp/

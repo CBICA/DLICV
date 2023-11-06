@@ -1,19 +1,7 @@
 import nibabel as nib
 from pathlib import Path
 
-def load_model(model_path):
-    """
-    Load the trained nnUNet model.
-    :param model_path: Path to the saved model.
-    :return: Loaded model.
-    """
-    # This is a placeholder function, adjust the loading method according to how nnUNet loads the model
-    model = ""
-    model.load_state_dict(model_path)
-    model.eval()
-    return model
-
-def compute_volume(input_path, model):
+def compute_volume(input_path, output_path, model_path, **kwargs):
     """
     Compute the intracranial volume from the input image using the nnUNet model.
     :param input_path: Path to the input image (single image or directory of images).
@@ -22,18 +10,62 @@ def compute_volume(input_path, model):
     """
     from nnunet.inference.predict import predict_from_folder
 
-    # If input_path is a directory, you'll need to modify this to handle each image
-    if isinstance(input_path, (str, Path)) and Path(input_path).is_file():
-        input_img = nib.load(str(input_path))
-        # Assuming your nnUNet predict function takes a nibabel object and returns a nibabel object
-        prediction = predict_from_folder(input_img, model)
-        return prediction
-    elif Path(input_path).is_dir():
-        predictions = []
-        for file_path in Path(input_path).glob('*.nii.gz'):
-            input_img = nib.load(str(file_path))
-            prediction = predict_from_folder(input_img, model)
-            predictions.append(prediction)
-        return predictions
-    else:
-        raise ValueError(f"The input path {input_path} is not a file or directory.")
+    # FROM nnUNet docs: (https://github.com/MIC-DKFZ/nnUNet/blob/nnunetv1/nnunet/inference/predict.py#L614)
+    # predict_from_folder(  model: str, "model output folder. Will automatically discover the folds "
+    #                       input_folder: str, "Must contain all modalities for each patient in the correct order (same as training). Files must be named CASENAME_XXXX.nii.gz where XXXX is the modality identifier (0000, 0001, etc)", required=True
+    #                       output_folder: str, "folder for saving predictions"
+    #                       folds: Union[Tuple[int], List[int]],"folds to use for prediction. Default is None which means that folds will be detected automatically in the model output folder"
+    #                       save_npz: bool, "use this if you want to ensemble these predictions with those of other models. Softmax probabilities will be saved as compresed numpy arrays in output_folder and can be merged between output_folders with merge_predictions.py"
+    #                       num_threads_preprocessing: int, "Determines many background processes will be used for data preprocessing. Reduce this if you run into out of memory (RAM) problems. Default: 6"
+    #                       num_threads_nifti_save: int, "Determines many background processes will be used for segmentation export. Reduce this if you run into out of memory (RAM) problems. Default: 6"
+    #                       lowres_segmentations: Union[str, None], "if model is the highres stage of the cascade then you need to use -l to specify where the segmentations of the corresponding lowres unet are. Here they are required to do a prediction"
+    #                       part_id: int, "Used to parallelize the prediction of the folder over several GPUs. If you want to use n GPUs to predict this folder you need to run this command n times with --part_id=0, ... n-1 and --num_parts=n (each with a different GPU (for example via CUDA_VISIBLE_DEVICES=X)"
+    #                       num_parts: int, "Used to parallelize the prediction of the folder over several GPUs. If you want to use n GPUs to predict this folder you need to run this command n times with --part_id=0, ... n-1 and --num_parts=n (each with a different GPU (for example via CUDA_VISIBLE_DEVICES=X)"
+    #                       tta: bool, "Set to 0 to disable test time data augmentation (speedup of factor 4(2D)/8(3D)), lower quality segmentations"
+    #                       mixed_precision: bool = True, 'Predictions are done with mixed precision by default. This improves speed and reduces the required vram. If you want to disable mixed precision you can set this flag. Note that this is not recommended (mixed precision is ~2x faster!)'
+    #                       overwrite_existing: bool = True, "Set this to 0 if you need to resume a previous prediction. Default: 1 (=existing segmentations in output_folder will be overwritten)"
+    #                       mode: str = 'normal', "'normal' or 'fast' or 'fastest'"
+    #                       overwrite_all_in_gpu: bool = None, "can be None, False or True"
+    #                       step_size: float = 0.5, "don't touch"
+    #                       checkpoint_name: str = "model_final_checkpoint",
+    #                       segmentation_export_kwargs: dict = None,
+    #                       disable_postprocessing: bool = False):
+    
+    # FOR THE PRETRAINED MODEL WITH TASK_ID = 802 AKA DLICV
+    folds = [1]
+    save_npz = False
+    num_threads_preprocessing = 6
+    num_threads_nifti_save = 6
+    lowres_segmentations = None
+    part_id = 0 # Change this if multiple GPUs are present
+    num_parts = 1
+    tta = 0
+    mixed_precision = True
+    overwrite_existing = False
+    mode = "fastest"
+    overwrite_all_in_gpu = 1
+    step_size = 0.5
+    checkpoint_name = "model_final_checkpoint"
+    segmentation_export_kwargs = None
+    disable_postprocessing = False
+    predict_from_folder(model_path,
+                        input_path,
+                        output_path,
+                        folds,
+                        save_npz,
+                        num_threads_preprocessing,
+                        num_threads_nifti_save,
+                        lowres_segmentations,
+                        part_id,
+                        num_parts,
+                        tta,
+                        mixed_precision,
+                        overwrite_existing,
+                        mode,
+                        overwrite_all_in_gpu,
+                        step_size,
+                        checkpoint_name,
+                        segmentation_export_kwargs,
+                        disable_postprocessing)
+    
+    return

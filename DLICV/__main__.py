@@ -1,76 +1,68 @@
-import argparse
 import os
-import sys
+import argparse
+import shutil
 from pathlib import Path
+import tempfile
 from DLICV.compute_icv import compute_volume
 
+def validate_path(parser, arg):
+    """Ensure the provided path exists."""
+    if not Path(arg).exists():
+        parser.error(f"The path {arg} does not exist.")
+    return arg
+
+def copy_and_rename_inputs(input_path, destination_dir):
+    """Copy and rename input files according to nnUNet convention."""
+    input_path = Path(input_path)
+    destination_dir = Path(destination_dir)
+    
+    if input_path.is_dir():
+        for filepath in input_path.glob('*.nii.gz'):
+            new_filename = filepath.stem.split('.')[0] + '_0000.nii.gz'
+            shutil.copy(filepath, destination_dir / new_filename)
+    else:
+        new_filename = input_path.stem + '_0000.nii.gz'
+        shutil.copy(input_path, destination_dir / new_filename)
+
 def main():
-    # Read version from the VERSION file
-    version = Path(__file__).with_name("VERSION").read_text().strip()
-
-    parser = argparse.ArgumentParser(description="DLICV - Deep Learning Intra Cranial Volume estimation from structural MRI scans.")
-    
-    parser.add_argument(
-        '-i', '--input', 
-        type=str, 
-        required=True, 
-        help='Path to the input nifti image or a directory of nifti images.'
-    )
-    
-    parser.add_argument(
-        '-o', '--output', 
-        type=str, 
-        required=True, 
-        help='Path where the output nifti image or directory to save output images will be saved. Expecting an nnUNet model.'
-    )
-    
-    parser.add_argument(
-        '-m', '--model', 
-        type=str, 
-        required=False,
-        default="default",
-        help='Path where the model to be used is stored.'
-    )
-
-    parser.add_argument(
-        '-v', '--version', 
-        action='version', 
-        version=f'%(prog)s {version}',
-        help="Show program's version number and exit."
-    )
+    """Main function to manage the prediction workflow."""
+    parser = argparse.ArgumentParser(description="DLICV - Deep Learning Intra Cranial Volume")
+    parser.add_argument("-i","--input", required=True, type=lambda x: validate_path(parser, x), help="Input .nii.gz image or folder path.")
+    parser.add_argument("-o","--output", required=True, help="Output image or folder path.")
+    parser.add_argument("-m","--model", required=True, type=lambda x: validate_path(parser, x), help="Model path.")
+    parser.add_argument("-v","--version", action="version", version=Path(__file__).with_name("VERSION").read_text().strip(), help="Show program's version number and exit.")
+    parser.add_argument("--kwargs", nargs=argparse.REMAINDER, help="Additional keyword arguments to pass to compute_icv.py")
 
     args = parser.parse_args()
 
-    # Check if input is a directory or file
-    input_path = Path(args.input)
-    if input_path.is_dir():
-        # Process each nifti image in the directory
-        for file_path in input_path.glob('*.nii.gz'):
-            process_image(file_path, args.output, args.model)
-    elif input_path.is_file():
-        # Process the single file
-        process_image(input_path, args.output, args.model)
-    else:
-        print(f"The input path {args.input} is not valid.")
-        sys.exit(1)
+    kwargs = {}
+    if args.kwargs:
+        for kwarg in args.kwargs:
+            key, value = kwarg.split('=', 1)
+            kwargs[key] = value
 
-def process_image(input_file, output_base, model):
-    # Calculate intracranial volume
-    output_volume = compute_volume(input_file, model)
-    
-    # Determine the output file path
-    if Path(output_base).is_dir():
-        output_path = Path(output_base) / input_file.name
-    else:
-        output_path = Path(output_base)
-    
-    # Create the directory if it does not exist
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Save the output volume
-    output_volume.to_filename(str(output_path))  # Assuming 'output_volume' is a nibabel Nifti1Image
-    
-    print(f"Intracranial volume computed for {input_file} and saved to {output_path}")
+    input_path, output_path, model_path = args.input, args.output, args.model
+
+    # Create cross-platform temp dir, and child dirs that nnUNet needs
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_input_dir = Path(temp_dir) / "nnUNet_raw_data"
+        temp_preprocessed_dir = Path(temp_dir) / "nnUNet_preprocessed"
+        temp_output_dir = Path(temp_dir) / "nnUNet_out"
+        temp_input_dir.mkdir()
+        temp_output_dir.mkdir()
+
+        copy_and_rename_inputs(input_path, temp_input_dir)
+        compute_volume(
+            str(temp_input_dir),
+            str(temp_output_dir),
+            model_path,
+            **kwargs
+        )
+
+        # Move results to the specified output location
+        for file in temp_output_dir.iterdir():
+            shutil.move(str(file), output_path)
+        print(f"Prediction complete. Results saved to {output_path}")
 
 if __name__ == "__main__":
     main()

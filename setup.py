@@ -6,12 +6,7 @@ from setuptools import find_packages, setup
 
 
 def read(*paths, **kwargs):
-    """Read the contents of a text file safely.
-    >>> read("project_name", "VERSION")
-    '0.1.0'
-    >>> read("README.md")
-    ...
-    """
+    """Read the contents of a text file safely."""
 
     content = ""
     with io.open(
@@ -44,10 +39,7 @@ setup(
     url="https://github.com/georgeaidinis/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
     install_requires=read_requirements("requirements.txt"),
-    entry_points={"console_scripts": ["DLICV = DLICV.__main__:main", 
-                                      "dlicv = DLICV.__main__:main",
-                                      "DLICV compute = DLICV.__main__:main", 
-                                      "dlicv compute = DLICV.__main__:main", ]},
+    entry_points={"console_scripts": ["DLICV = DLICV.__main__:main"]},
     extras_require={"test": read_requirements("requirements-test.txt")},
     classifiers=[
                     "Intended Audience :: Developers",
