@@ -1,4 +1,4 @@
-import os
+import sys
 import argparse
 import shutil
 from pathlib import Path
@@ -9,6 +9,7 @@ def validate_path(parser, arg):
     """Ensure the provided path exists."""
     if not Path(arg).exists():
         parser.error(f"The path {arg} does not exist.")
+        sys.exit(1)
     return arg
 
 def copy_and_rename_inputs(input_path, destination_dir):
@@ -28,7 +29,7 @@ def main():
     """Main function to manage the prediction workflow."""
     parser = argparse.ArgumentParser(description="DLICV - Deep Learning Intra Cranial Volume")
     parser.add_argument("-i","--input", required=True, type=lambda x: validate_path(parser, x), help="Input .nii.gz image or folder path.")
-    parser.add_argument("-o","--output", required=True, help="Output image or folder path.")
+    parser.add_argument("-o","--output", required=True, help="Output image or folder path. If folder path, it should exist.")
     parser.add_argument("-m","--model", required=True, type=lambda x: validate_path(parser, x), help="Model path.")
     parser.add_argument("-v","--version", action="version", version=Path(__file__).with_name("VERSION").read_text().strip(), help="Show program's version number and exit.")
     parser.add_argument("--kwargs", nargs=argparse.REMAINDER, help="Additional keyword arguments to pass to compute_icv.py")
