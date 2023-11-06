@@ -16,6 +16,9 @@ pip install dlicv
 
 ```bash
 git clone https://github.com/georgeaidinis/DLICV
+cd DLICV
+conda create -n DLICV -y python=3.8 && conda activate DLICV
+pip install .
 ```
 
 ## Usage
@@ -26,16 +29,44 @@ git clone https://github.com/georgeaidinis/DLICV
 from dlicv.compute_icv import compute_volume
 
 # Assuming your nifti file is named 'input.nii.gz'
-volume_image = compute_volume("input.nii.gz")
+volume_image = compute_volume("input.nii.gz", "output.nii.gz", "path/to/model/")
 ```
 
 ### From the terminal
 
 ```bash
-dlicv compute --input input.nii.gz --output output.nii.gz
+DLICV --input input.nii.gz --output output.nii.gz --model path/to/model
 ```
 
-Replace the `input.nii.gz` with the path to your input infit file.
+Replace the `input.nii.gz` with the path to your input nifti file, as well as the model path.
+
+Example:
+
+Assuming a file structure like so:
+
+```bash
+.
+├── in
+│   ├── input1.nii.gz
+│   ├── input2.nii.gz
+│   └── input3.nii.gz
+├── model
+│   ├── fold_0
+│   ├── fold_1
+│   │   ├── debug.json
+│   │   ├── model_final_checkpoint.model
+│   │   ├── model_final_checkpoint.model.pkl
+│   │   ├── model_latest.model
+│   │   ├── model_latest.model.pkl
+│   └── plans.pkl
+└── out
+```
+
+An example command might be:
+
+```bash
+DLICV --input path/to/input/ --output path/to/output/ --model path/to/model/
+```
 
 ## Contact
 
