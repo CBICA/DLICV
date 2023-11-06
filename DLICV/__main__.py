@@ -59,9 +59,13 @@ def main():
             **kwargs
         )
 
-        # Move results to the specified output location
+       # Move results to the specified output location, including only .nii.gz files
         for file in temp_output_dir.iterdir():
-            shutil.move(str(file), output_path)
+            if file.suffixes == ['.nii', '.gz']:
+                shutil.move(str(file), output_path)
+        print()
+        print()
+        print()
         print(f"Prediction complete. Results saved to {output_path}")
 
 if __name__ == "__main__":
