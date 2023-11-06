@@ -182,3 +182,4 @@ Temporary Items
 *.nii
 *.nii.gz
 temp/
+.vscode

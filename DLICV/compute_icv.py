@@ -1,11 +1,10 @@
-import nibabel as nib
-from pathlib import Path
-
 def compute_volume(input_path, output_path, model_path, **kwargs):
     """
     Compute the intracranial volume from the input image using the nnUNet model.
     :param input_path: Path to the input image (single image or directory of images).
-    :param model: Path to the model to be applied, or 'default'.
+    :param output_path: Path for the output image (single image or directory of images).
+    :param model_path: Path to the model to be applied, or 'default'.
+    :param kwargs: Additional keyword arguments for the predict_from_folder function.
     :return: The output image with the computed volume or a list of output images.
     """
     from nnunet.inference.predict import predict_from_folder
@@ -32,40 +31,33 @@ def compute_volume(input_path, output_path, model_path, **kwargs):
     #                       disable_postprocessing: bool = False):
     
     # FOR THE PRETRAINED MODEL WITH TASK_ID = 802 AKA DLICV
-    folds = [1]
-    save_npz = False
-    num_threads_preprocessing = 6
-    num_threads_nifti_save = 6
-    lowres_segmentations = None
-    part_id = 0 # Change this if multiple GPUs are present
-    num_parts = 1
-    tta = 0
-    mixed_precision = True
-    overwrite_existing = False
-    mode = "fastest"
-    overwrite_all_in_gpu = 1
-    step_size = 0.5
-    checkpoint_name = "model_final_checkpoint"
-    segmentation_export_kwargs = None
-    disable_postprocessing = False
+    # Default values for predict_from_folder parameters
+    default_params = {
+        'folds': [1],
+        'save_npz': False,
+        'num_threads_preprocessing': 6,
+        'num_threads_nifti_save': 6,
+        'lowres_segmentations': None,
+        'part_id': 0,  # Change this if multiple GPUs are present
+        'num_parts': 1,
+        'tta': 0,
+        'mixed_precision': True,
+        'overwrite_existing': False,
+        'mode': 'fastest',
+        'overwrite_all_in_gpu': 1,
+        'step_size': 0.5,
+        'checkpoint_name': "model_final_checkpoint",
+        'segmentation_export_kwargs': None,
+        'disable_postprocessing': False
+    }
+
+    # Update default parameters with any additional keyword arguments provided
+    params = {**default_params, **kwargs}
+
+    # Call predict_from_folder with updated parameters
     predict_from_folder(model_path,
                         input_path,
                         output_path,
-                        folds,
-                        save_npz,
-                        num_threads_preprocessing,
-                        num_threads_nifti_save,
-                        lowres_segmentations,
-                        part_id,
-                        num_parts,
-                        tta,
-                        mixed_precision,
-                        overwrite_existing,
-                        mode,
-                        overwrite_all_in_gpu,
-                        step_size,
-                        checkpoint_name,
-                        segmentation_export_kwargs,
-                        disable_postprocessing)
+                        **params)
     
     return
