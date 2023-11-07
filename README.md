@@ -2,7 +2,7 @@
 
 ## Overview
 
-DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) model to compute the intracranial volume from structural MRI scans in the nifti image format, oriented in LPS.
+DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) model to compute the intracranial volume from structural MRI scans in the nifti image format, oriented in _**LPS**_ orientation.
 
 ## Installation
 
@@ -22,6 +22,8 @@ pip install .
 ```
 
 ## Usage
+
+A pre-trained nnUNet model can be found in the [DLICV-0.0.0 release](https://github.com/georgeaidinis/DLICV/releases/tag/v0.0.0) as an [artifact](https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip). Feel free to use it under the package's [license](LICENSE).
 
 ### Import as a python package
 
@@ -67,6 +69,10 @@ An example command might be:
 ```bash
 DLICV --input path/to/input/ --output path/to/output/ --model path/to/model/
 ```
+
+### Using the docker container
+
+In the [docker container](https://hub.docker.com/repository/docker/aidinisg/dlicv/general), the default model is included, but you can also provide your own.
 
 ## Contact
 

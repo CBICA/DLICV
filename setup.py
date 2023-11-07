@@ -48,7 +48,7 @@ setup(
                     "Programming Language :: Python :: 3",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence",
                     "Topic :: Scientific/Engineering :: Image Processing",
-                    "Topic :: Scientific/Engineering :: Medical Science Apps",
+                    "Topic :: Scientific/Engineering :: Medical Science Apps.",
                 ],
     license="By installing/using DeepMRSeg, the user agrees to the following license: See https://www.med.upenn.edu/cbica/software-agreement-non-commercial.html",
     keywords = [
@@ -60,4 +60,5 @@ setup(
                     'nnU-Net',
                     'nnunet'
                 ], 
+    package_data={"DLICV": ["VERSION"]},
 )
