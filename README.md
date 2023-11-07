@@ -21,6 +21,12 @@ conda create -n DLICV -y python=3.8 && conda activate DLICV
 pip install .
 ```
 
+### Using docker
+
+```bash
+docker pull aidinisg/dlicv:0.0.0
+```
+
 ## Usage
 
 A pre-trained nnUNet model can be found in the [DLICV-0.0.0 release](https://github.com/georgeaidinis/DLICV/releases/tag/v0.0.0) as an [artifact](https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip). Feel free to use it under the package's [license](LICENSE).
