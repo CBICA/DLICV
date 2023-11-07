@@ -74,6 +74,23 @@ DLICV --input path/to/input/ --output path/to/output/ --model path/to/model/
 
 In the [docker container](https://hub.docker.com/repository/docker/aidinisg/dlicv/general), the default model is included, but you can also provide your own.
 
+Without providing a model:
+
+```bash
+docker run --gpus all -it --rm -v /path/to/local/input:/workspace/input \
+                               -v /path/to/local/output:/workspace/output \
+                               aidinisg/dlicv:0.0.0  -i input/ -o output/
+```
+
+Providing a model:
+
+```bash
+docker run --gpus all -it --rm -v /path/to/local/model:/workspace/model \
+                               -v /path/to/local/input:/workspace/input \
+                               -v /path/to/local/output:/workspace/output \
+                               aidinisg/dlicv:0.0.0  -i input/ -o output/  --model model/
+```
+
 ## Contact
 
 For more information, please contact [CBICA Software](mailto:software@cbica.upenn.edu).
