@@ -77,3 +77,23 @@ In the [docker container](https://hub.docker.com/repository/docker/aidinisg/dlic
 ## Contact
 
 For more information, please contact [CBICA Software](mailto:software@cbica.upenn.edu).
+
+## For Developers
+
+Contributions are welcome! Please refer to our [CONTRIBUTING.md](CONTRIBUTING.md) for more information on how to report bugs, suggest enhancements, and contribute code.
+
+If you're a developer looking to contribute, you'll first need to set up a development environment. After cloning the repository, you can install the development dependencies with:
+
+```bash
+pip install -r requirements-test.txt
+```
+
+This will install the packages required for running tests and formatting code. Please make sure to write tests for new code and run them before submitting a pull request.
+
+### Running Tests
+
+You can run the test suite with the following command:
+
+```bash
+pytest
+```
