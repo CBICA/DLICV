@@ -3,13 +3,17 @@ FROM python:3.8-slim
 
 LABEL IMAGE="DLICV"
 
-RUN mkdir /DLICV/model && pip install DLICV==0.0.0
+RUN mkdir /DLICV/  && pip install DLICV==0.0.0
 
 # Download the model zip file
-ADD https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip /DLICV/model/
+ADD https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip /DLICV/
 
 # Unzip the model and remove the zip file
-RUN unzip /DLICV/model/model.zip -d /DLICV/model/ && rm /DLICV/model/model.zip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip && \
+    rm -rf /var/lib/apt/lists/* && \
+    unzip /DLICV/model.zip -d /DLICV/ && \
+    rm /DLICV/model.zip
 
 # Run DLICV.py when the container launches
 # Note: The entrypoint uses the model path inside the container.
