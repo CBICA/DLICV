@@ -9,7 +9,7 @@ DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) 
 ### As a python package
 
 ```bash
-pip install dlicv
+pip install DLICV
 ```
 
 ### Directly from this repository
@@ -34,7 +34,7 @@ A pre-trained nnUNet model can be found in the [DLICV-0.0.0 release](https://git
 ### Import as a python package
 
 ```python
-from dlicv.compute_icv import compute_volume
+from DLICV.compute_icv import compute_volume
 
 # Assuming your nifti file is named 'input.nii.gz'
 volume_image = compute_volume("input.nii.gz", "output.nii.gz", "path/to/model/")
