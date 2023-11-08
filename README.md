@@ -15,7 +15,7 @@ pip install dlicv
 ### Directly from this repository
 
 ```bash
-git clone https://github.com/georgeaidinis/DLICV
+git clone https://github.com/CBICA/DLICV
 cd DLICV
 conda create -n DLICV -y python=3.8 && conda activate DLICV
 pip install .
@@ -29,7 +29,7 @@ docker pull aidinisg/dlicv:0.0.0
 
 ## Usage
 
-A pre-trained nnUNet model can be found in the [DLICV-0.0.0 release](https://github.com/georgeaidinis/DLICV/releases/tag/v0.0.0) as an [artifact](https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip). Feel free to use it under the package's [license](LICENSE).
+A pre-trained nnUNet model can be found in the [DLICV-0.0.0 release](https://github.com/CBICA/DLICV/releases/tag/v0.0.0) as an [artifact](https://github.com/CBICA/DLICV/releases/download/v0.0.0/model.zip). Feel free to use it under the package's [license](LICENSE).
 
 ### Import as a python package
 

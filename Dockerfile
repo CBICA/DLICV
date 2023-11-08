@@ -6,7 +6,7 @@ LABEL IMAGE="DLICV"
 RUN mkdir /DLICV/  && pip install DLICV==0.0.0
 
 # Download the model zip file
-ADD https://github.com/georgeaidinis/DLICV/releases/download/v0.0.0/model.zip /DLICV/
+ADD https://github.com/CBICA/DLICV/releases/download/v0.0.0/model.zip /DLICV/
 
 # Unzip the model and remove the zip file
 RUN apt-get update && \
