@@ -12,14 +12,14 @@ def mock_paths(tmp_path):
     input_path = tmp_path / "input"
     input_path.mkdir()
     (input_path / "test.nii.gz").write_text("dummy nii data")
-    
+
     output_path = tmp_path / "output"
     output_path.mkdir()
 
     model_path = tmp_path / "model"
     model_path.mkdir()
     (model_path / "model.pkl").write_text("dummy model data")
-    
+
     return input_path, output_path, model_path
 
 # Fixture for setting up argparse arguments
