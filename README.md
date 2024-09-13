@@ -6,6 +6,16 @@ DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) 
 
 ## Installation
 
+To install DLICV, just do
+```bash
+    pip install DLICV
+```
+
+Or to manually download DLICV
+```bash
+    pip install -e .
+```
+
 We have all the requirements ready at 'requirements.txt', just do
 ```bash
   pip3 install -r requirements.txt
