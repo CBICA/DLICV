@@ -1,13 +1,12 @@
 # content of tests/test_main.py
+import os
+import unittest
 
-import pytest
-import shutil
-from DLICV.__main__ import main, validate_path, copy_and_rename_inputs
-from unittest.mock import patch, MagicMock
-from pathlib import Path
+from DLICV.__main__ import main
+from DLICV.utils import prepare_data_folder, rename_and_copy_files
+
 
 # Fixture for creating mock paths
-@pytest.fixture
 def mock_paths(tmp_path):
     input_path = tmp_path / "input"
     input_path.mkdir()
@@ -22,40 +21,42 @@ def mock_paths(tmp_path):
 
     return input_path, output_path, model_path
 
+
 # Fixture for setting up argparse arguments
-@pytest.fixture
 def setup_args(mock_paths):
     input_path, output_path, model_path = mock_paths
     return [
-        '--input', str(input_path),
-        '--output', str(output_path),
-        '--model', str(model_path),
+        "--input",
+        str(input_path),
+        "--output",
+        str(output_path),
+        "--model",
+        str(model_path),
         # Add other necessary arguments here
     ]
 
-# Use the fixtures to provide the paths for each test function
-def test_validate_path_existing(mock_paths):
-    input_path, _, _ = mock_paths
-    assert validate_path(MagicMock(), str(input_path)) == str(input_path)
 
-def test_validate_path_non_existing():
-    with pytest.raises(SystemExit):
-        validate_path(MagicMock(), 'non_existing_path')
+class CheckUtils(unittest.TestCase):
 
-def test_copy_and_rename_inputs_file(mock_paths):
-    input_path, output_path, _ = mock_paths
-    # ...
+    def test_prepare_data_folder(self):
+        prepare_data_folder("test_to_remove")
+        self.assertTrue(os.path.exists("test_to_remove"))
 
-def test_copy_and_rename_inputs_directory(mock_paths):
-    input_path, output_path, _ = mock_paths
-    # ...
+    def test_rename_and_copy_files(self):
+        a, b = rename_and_copy_files(
+            "../test_input/DLICV_test_images", "../test_input/DLICV_test_results"
+        )
+        self.assertIsNotNone(a)
+        self.assertIsNotNone(b)
 
-# Example of a more complex test using the setup_args fixture
-@patch('DLICV.__main__.compute_volume')
-def test_main_end_to_end(mock_compute_volume, setup_args):
-    args = setup_args
-    with patch('sys.argv', ['__main__.py'] + args):
-        main()
-    # Assert statements to verify behavior
 
-# Place additional tests here, expanding on the simple structure above
+class CheckInference(unittest.TestCase):
+
+    def test_inference(self):
+        try:
+            # TODO: This won't run as we don't save nnunet_results anywhere, this will be worked on soon
+            os.system(
+                "DLICV -i ../test_input/DLICV_test_images -o .../test_input/DLICV_test_results/ -m ../nnunet_results -d 901 -f 0 -tr nnUNetTrainer -c 3d_fullres -p nnUNetPlans -device cpu"
+            )
+        except:
+            self.fail("Error raised while training")
