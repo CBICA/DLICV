@@ -2,23 +2,23 @@
 
 ## Overview
 
-DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet/tree/nnunetv1) model to compute the intracranial volume from structural MRI scans in the nifti image format, oriented in _**LPS**_ orientation.
+DLICV uses a trained [nnUNet](https://github.com/MIC-DKFZ/nnUNet) model to compute the intracranial volume from structural MRI scans in the nifti image format, oriented in _**LPS**_ orientation.
 
 ## Installation
 
 To install DLICV, just do
 ```bash
-    pip install DLICV
+pip install DLICV
 ```
 
 Or to manually download DLICV
 ```bash
-    pip install -e .
+pip install -e .
 ```
 
-We have all the requirements ready at 'requirements.txt', just do
+You can install the required packages with
 ```bash
-  pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## How to run
@@ -37,5 +37,3 @@ DLICV -i test_input/DLICV_test_images -o test_input/DLICV_test_results -m nnunet
       - set input_folder_path
       - set output_folder_path
   - sbatch sample_submit_inference.sh
-
-Notice: A small dataset is provided for you in test/DLICV_test_images/ folder to try
