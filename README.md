@@ -13,6 +13,8 @@ pip install DLICV
 
 Or to manually download DLICV
 ```bash
+git clone https://github.com/CBICA/DLICV
+cd DLICV
 pip install -e .
 ```
 
