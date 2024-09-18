@@ -68,15 +68,15 @@ def main() -> None:
         help="nnU-Net configuration that should be used for prediction. Config must be located "
         "in the plans specified with -p",
     )
-    parser.add_argument(
-        "-f",
-        nargs="+",
-        type=str,
-        required=False,
-        default=(0, 1, 2, 3, 4),
-        help="Specify the folds of the trained model that should be used for prediction. "
-        "Default: (0, 1, 2, 3, 4)",
-    )
+    # parser.add_argument(
+    #     "-f",
+    #     nargs="+",
+    #     type=str,
+    #     required=False,
+    #     default=(0),
+    #     help="Specify the folds of the trained model that should be used for prediction. "
+    #     "Default: (0)",
+    # )
     parser.add_argument(
         "-step_size",
         type=float,
@@ -177,7 +177,8 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    args.f = [i if i == "all" else int(i) for i in args.f]
+    #args.f = [i if i == "all" else int(i) for i in args.f]
+    args.f = [0]
 
     #### data conversion ####
     src_folder = args.i # input folder
@@ -308,7 +309,7 @@ def main() -> None:
                 os.path.join(files_folder, filename),
                 os.path.join(files_folder, original_name),
             )
-
+    # Remove the (temporary) des_folder directory
     if os.path.exists(des_folder):
         shutil.rmtree(des_folder)
 
