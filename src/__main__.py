@@ -200,7 +200,7 @@ def main() -> None:
     # )
 
     ## check if -i argument is a folder, list (csv), or a single file (nii.gz)
-     if os.path.isdir(args.i): # if args.i is a directory
+    if os.path.isdir(args.i): # if args.i is a directory
         src_folder=args.i 
         prepare_data_folder(des_folder)
         rename_dic, rename_back_dict  = rename_and_copy_files(src_folder, des_folder)
@@ -209,7 +209,7 @@ def main() -> None:
             json.dump(rename_dic, f, ensure_ascii=False, indent=4)
         print(f"Renaming dic is saved to {datalist_file}")
 
-     else: # if args.i is a file
+    else: # if args.i is a file
         if args.i.split('.')[-1] == 'csv': # if args.i is a .csv list
             print('List input (.csv) detected!')
             sys.exit() # don't do anything for now
@@ -219,7 +219,7 @@ def main() -> None:
 
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
-        # HF download
+        # HF download model
         print("DLICV model not found, downloading")
         from huggingface_hub import snapshot_download
         snapshot_download(repo_id="nichart/DLICV",local_dir=".")
