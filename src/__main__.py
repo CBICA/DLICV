@@ -1,8 +1,8 @@
 import argparse
 import json
 import os
-import sys
 import shutil
+import sys
 import warnings
 
 import torch
@@ -11,6 +11,7 @@ from .utils import prepare_data_folder, rename_and_copy_files
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -32,17 +33,11 @@ def main() -> None:
         help="Output folder. If it does not exist it will be created. Predicted segmentations will "
         "have the same name as their source images.",
     )
-    # parser.add_argument(
-    #     "-m",
-    #     type=str,
-    #     required=True,
-    #     help="Model folder path. The model folder should be named nnunet_results.",
-    # )
     parser.add_argument(
         "-d",
         type=str,
-        required=False, 
-        default='901',
+        required=False,
+        default="901",
         help="Dataset with which you would like to predict. You can specify either dataset name or id",
     )
     parser.add_argument(
@@ -63,20 +58,11 @@ def main() -> None:
     parser.add_argument(
         "-c",
         type=str,
-        required=False, 
-        default='3d_fullres',
+        required=False,
+        default="3d_fullres",
         help="nnU-Net configuration that should be used for prediction. Config must be located "
         "in the plans specified with -p",
     )
-    # parser.add_argument(
-    #     "-f",
-    #     nargs="+",
-    #     type=str,
-    #     required=False,
-    #     default=(0),
-    #     help="Specify the folds of the trained model that should be used for prediction. "
-    #     "Default: (0)",
-    # )
     parser.add_argument(
         "-step_size",
         type=float,
@@ -164,8 +150,8 @@ def main() -> None:
         default="cuda",
         required=False,
         help="Use this to set the device the inference should run with. Available options are 'cuda' (GPU), "
-             "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN)."
-             "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_predict [...] instead!"
+        "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN)."
+        "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_predict [...] instead!",
     )
     parser.add_argument(
         "--disable_progress_bar",
@@ -177,15 +163,14 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    #args.f = [i if i == "all" else int(i) for i in args.f]
     args.f = [0]
 
-    #### data conversion ####
-    src_folder = args.i # input folder
-    if not os.path.exists(args.o): # create output folder if it does not exist
+    # data conversion
+    src_folder = args.i  # input folder
+    if not os.path.exists(args.o):  # create output folder if it does not exist
         os.makedirs(args.o)
-    
-    des_folder = os.path.join(args.o,"renamed_image")
+
+    des_folder = os.path.join(args.o, "renamed_image")
 
     # DELETE THIS ONCE THE CHANGE WORKS
     # prepare_data_folder(des_folder)
@@ -203,32 +188,38 @@ def main() -> None:
     #     % (args.d, args.d),
     # )
 
-    ## check if -i argument is a folder, list (csv), or a single file (nii.gz)
-    if os.path.isdir(args.i): # if args.i is a directory
-        src_folder=args.i 
+    # check if -i argument is a folder, list (csv), or a single file (nii.gz)
+    if os.path.isdir(args.i):  # if args.i is a directory
+        src_folder = args.i
         prepare_data_folder(des_folder)
-        rename_dic, rename_back_dict  = rename_and_copy_files(src_folder, des_folder)
+        rename_dic, rename_back_dict = rename_and_copy_files(src_folder, des_folder)
         datalist_file = os.path.join(des_folder, "renaming.json")
         with open(datalist_file, "w", encoding="utf-8") as f:
             json.dump(rename_dic, f, ensure_ascii=False, indent=4)
         print(f"Renaming dic is saved to {datalist_file}")
 
-    else: # if args.i is a file
-        if args.i.split('.')[-1] == 'csv': # if args.i is a .csv list
-            print('List input (.csv) detected!')
-            sys.exit() # don't do anything for now
-        elif args.i.split('.')[-2] == 'nii' & rgs.i.split('.')[-2] == 'gz': # if args.i is a .nii.gz file
-            print('Nifti file (.nii.gz) input detected!')
-            sys.exit() # don't do anything for now
+    else:  # if args.i is a file
+        if args.i.split(".")[-1] == "csv":  # if args.i is a .csv list
+            print("List input (.csv) detected!")
+            sys.exit()  # don't do anything for now
+        elif (
+            args.i.split(".")[-2] == "nii" & args.i.split(".")[-2] == "gz"
+        ):  # if args.i is a .nii.gz file
+            print("Nifti file (.nii.gz) input detected!")
+            sys.exit()  # don't do anything for now
 
-    #model_folder = 'nnunet_results/Dataset901_Task901_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/'
-    model_folder = os.path.join('nnunet_results', 'Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/' % (args.d, args.d))
+    model_folder = os.path.join(
+        "nnunet_results",
+        "Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/"
+        % (args.d, args.d),
+    )
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
         # HF download model
         print("DLICV model not found, downloading")
         from huggingface_hub import snapshot_download
-        snapshot_download(repo_id="nichart/DLICV",local_dir=".")
+
+        snapshot_download(repo_id="nichart/DLICV", local_dir=".")
         print("DLICV model has been successfully downloaded!")
     else:
         print("Loading the model...")
@@ -246,8 +237,10 @@ def main() -> None:
 
     if args.device == "cpu":
         import multiprocessing
-        # torch.set_num_threads(multiprocessing.cpu_count()) # use all threads (better for HPC)
-        torch.set_num_threads(multiprocessing.cpu_count() // 2) # use half of the threads (better for PC)
+
+        torch.set_num_threads(
+            multiprocessing.cpu_count() // 2
+        )  # use half of the threads (better for PC)
         device = torch.device("cpu")
     elif args.device == "cuda":
         # multithreading in torch doesn't help nnU-Netv2 if run on GPU
@@ -257,12 +250,12 @@ def main() -> None:
     else:
         device = torch.device("mps")
 
-    
-
     # exports for nnunetv2 purposes
     os.environ["nnUNet_raw"] = "/nnunet_raw/"
     os.environ["nnUNet_preprocessed"] = "/nnunet_preprocessed"
-    os.environ["nnUNet_results"] = "/nnunet_results" # where model will be located (fetched from HF)
+    os.environ["nnUNet_results"] = (
+        "/nnunet_results"  # where model will be located (fetched from HF)
+    )
 
     from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 
@@ -280,9 +273,7 @@ def main() -> None:
 
     # Retrieve the model and its weight
     predictor.initialize_from_trained_model_folder(
-        model_folder, 
-        args.f, 
-        checkpoint_name=args.chk
+        model_folder, args.f, checkpoint_name=args.chk
     )
 
     # Final prediction
