@@ -199,7 +199,7 @@ def main() -> None:
     #     % (args.d, args.d),
     # )
 
-    # check if -i argument is a folder, list (csv), or a single file (nii.gz)
+    ## check if -i argument is a folder, list (csv), or a single file (nii.gz)
      if os.path.isdir(args.i): # if args.i is a directory
 
           src_folder=args.i 
@@ -219,6 +219,16 @@ def main() -> None:
                print('Nifti file (.nii.gz) input detected!')
                sys.exit() # don't do anything for now
 
+    # Check if model exists. If not exist, download using HuggingFace
+    if not os.path.exists(model_folder):
+        # HF download
+        print("DLICV model not found, downloading")
+        from huggingface_hub import snapshot_download
+        snapshot_download(repo_id="nichart/DLICV",local_dir=".")
+        print("DLICV model has been successfully downloaded!")
+    else:
+        print("Loading the model...")
+
     model_folder = os.path.join('../nnunet_results', 'Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/' % (args.d, args.d))
     prepare_data_folder(args.o)
 
@@ -230,24 +240,26 @@ def main() -> None:
         "cuda",
         "mps",
     ], f"-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {args.device}."
+
     if args.device == "cpu":
         import multiprocessing
-
-        torch.set_num_threads(multiprocessing.cpu_count() // 2)
+        # torch.set_num_threads(multiprocessing.cpu_count()) # use all threads (better for HPC)
+        torch.set_num_threads(multiprocessing.cpu_count() // 2) # use half of the threads (better for PC)
         device = torch.device("cpu")
     elif args.device == "cuda":
-        # multithreading in torch doesn't help nnU-Net if run on GPU
+        # multithreading in torch doesn't help nnU-Netv2 if run on GPU
         torch.set_num_threads(1)
         torch.set_num_interop_threads(1)
         device = torch.device("cuda")
     else:
         device = torch.device("mps")
 
+    
 
     # exports for nnunetv2 purposes
     os.environ["nnUNet_raw"] = "/nnunet_raw/"
     os.environ["nnUNet_preprocessed"] = "/nnunet_preprocessed"
-    os.environ["nnUNet_results"] = "/nnunet_results"
+    os.environ["nnUNet_results"] = "/nnunet_results" # where model will be located (fetched from HF)
 
     from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 

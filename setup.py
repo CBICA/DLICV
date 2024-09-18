@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name="DLICV",
     version="1.0.0",
-    description="DLICV - Deep Learning Intra Cranial Volume",
+    description="DLICV - Deep Learning Intra Cranial Volume.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Ashish Singh, Guray Erus, Vishnu Bashyam, George Aidinis",
@@ -21,12 +21,16 @@ setup(
     download_url="https://github.com/CBICA/DLICV/",
     url="https://github.com/CBICA/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
+    python_requires=">=3.8",
     install_requires=[
         "torch>=2.1.2",
         "argparse",
-        "nnunetv2==2.5.1"
+        "nnunetv2==2.5.1",
+        "huggingface_hub"
     ],
-    entry_points={"console_scripts": ["DLICV = src.__main__:main"]},
+    entry_points={
+        "console_scripts": ["DLICV = src.__main__:main"]
+        },
     classifiers=[
                     "Intended Audience :: Developers",
                     "Intended Audience :: Science/Research",
@@ -36,7 +40,7 @@ setup(
                     "Topic :: Scientific/Engineering :: Image Processing",
                     "Topic :: Scientific/Engineering :: Medical Science Apps.",
                 ],
-    license="By installing/using DeepMRSeg, the user agrees to the following license: See https://www.med.upenn.edu/cbica/software-agreement-non-commercial.html",
+    license="By installing/using DLICV, the user agrees to the following license: See https://www.med.upenn.edu/cbica/software-agreement-non-commercial.html",
     keywords = [
                     'deep learning',
                     'image segmentation',
@@ -46,5 +50,7 @@ setup(
                     'nnU-Net',
                     'nnunet'
                 ],
-    package_data={"DLICV": ["VERSION"]},
+    package_data={
+        "DLICV": ["VERSION"]
+        },
 )

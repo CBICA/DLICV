@@ -3,7 +3,7 @@ FROM python:3.8-slim
 
 LABEL IMAGE="DLICV"
 
-RUN mkdir /DLICV/  && pip install DLICV==0.0.0
+RUN mkdir /DLICV/  && pip install DLICV==1.0.0
 
 # Download the model zip file
 ADD https://github.com/CBICA/DLICV/releases/download/v0.0.0/model.zip /DLICV/
