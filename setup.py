@@ -22,9 +22,9 @@ setup(
     url="https://github.com/CBICA/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
     install_requires=[
-        "torch",
+        "torch>=2.1.2",
         "argparse",
-        "nnunetv2"
+        "nnunetv2==2.5.1"
     ],
     entry_points={"console_scripts": ["DLICV = src.__main__:main"]},
     classifiers=[
