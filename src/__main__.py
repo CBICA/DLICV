@@ -181,7 +181,7 @@ def main() -> None:
 
     #### data conversion ####
     src_folder = args.i
-    des_folder = args.o
+    des_folder = os.path.join(args.o,"/renamed_image/")
 
     # DELETE THIS ONCE THE CHANGE WORKS
     # prepare_data_folder(des_folder)
@@ -201,23 +201,21 @@ def main() -> None:
 
     ## check if -i argument is a folder, list (csv), or a single file (nii.gz)
      if os.path.isdir(args.i): # if args.i is a directory
-
-          src_folder=args.i 
-          prepare_data_folder(des_folder)
-          rename_dic, rename_back_dict  = rename_and_copy_files(src_folder, des_folder)
-          datalist_file = os.path.join(des_folder, "renaming.json")
-          with open(datalist_file, "w", encoding="utf-8") as f:
-               json.dump(rename_dic, f, ensure_ascii=False, indent=4)
-          print(f"Renaming dic is saved to {datalist_file}")
+        src_folder=args.i 
+        prepare_data_folder(des_folder)
+        rename_dic, rename_back_dict  = rename_and_copy_files(src_folder, des_folder)
+        datalist_file = os.path.join(des_folder, "renaming.json")
+        with open(datalist_file, "w", encoding="utf-8") as f:
+            json.dump(rename_dic, f, ensure_ascii=False, indent=4)
+        print(f"Renaming dic is saved to {datalist_file}")
 
      else: # if args.i is a file
-
-          if args.i.split('.')[-1] == 'csv': # if args.i is a .csv list
-               print('List input (.csv) detected!')
-               sys.exit() # don't do anything for now
-          elif args.i.split('.')[-2] == 'nii' & rgs.i.split('.')[-2] == 'gz': # if args.i is a .nii.gz file
-               print('Nifti file (.nii.gz) input detected!')
-               sys.exit() # don't do anything for now
+        if args.i.split('.')[-1] == 'csv': # if args.i is a .csv list
+            print('List input (.csv) detected!')
+            sys.exit() # don't do anything for now
+        elif args.i.split('.')[-2] == 'nii' & rgs.i.split('.')[-2] == 'gz': # if args.i is a .nii.gz file
+            print('Nifti file (.nii.gz) input detected!')
+            sys.exit() # don't do anything for now
 
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
@@ -297,10 +295,9 @@ def main() -> None:
     )
 
     # After prediction, convert the image name back to original
-    files = os.listdir(args.o)
     files_folder = args.o
 
-    for filename in files:
+    for filename in os.listdir(files_folder):
         if filename.endswith(".nii.gz"):
             original_name = rename_back_dict[filename]
             os.rename(
