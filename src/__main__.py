@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 import shutil
-import sys
 import warnings
 
 import torch
@@ -194,6 +193,7 @@ def main() -> None:
         print("DLICV model not found, downloading...")
 
         from huggingface_hub import snapshot_download
+
         snapshot_download(repo_id="nichart/DLICV", local_dir=".")
         print("DLICV model has been successfully downloaded!")
     else:
