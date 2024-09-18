@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 import shutil
 import warnings
 
@@ -10,14 +11,6 @@ from .utils import prepare_data_folder, rename_and_copy_files
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
-
-# eports for nnunetv2 purposes
-os.environ["nnUNet_raw"] = "/nnunet_raw/"
-os.environ["nnUNet_preprocessed"] = "/nnunet_preprocessed"
-os.environ["nnUNet_results"] = "/nnunet_results"
-
-from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -30,8 +23,7 @@ def main() -> None:
         "-i",
         type=str,
         required=True,
-        help="input folder. Remember to use the correct channel numberings for your files (_0000 etc). "
-        "File endings must be the same as the training dataset!",
+        help="input folder or list or image (nii.gz). Remember to use the correct channel numberings for your files (_0000 etc). File endings must be the same as the training dataset!",
     )
     parser.add_argument(
         "-o",
@@ -40,16 +32,17 @@ def main() -> None:
         help="Output folder. If it does not exist it will be created. Predicted segmentations will "
         "have the same name as their source images.",
     )
-    parser.add_argument(
-        "-m",
-        type=str,
-        required=True,
-        help="Model folder path. The model folder should be named nnunet_results.",
-    )
+    # parser.add_argument(
+    #     "-m",
+    #     type=str,
+    #     required=True,
+    #     help="Model folder path. The model folder should be named nnunet_results.",
+    # )
     parser.add_argument(
         "-d",
         type=str,
-        required=True,
+        required=False, 
+        default='901',
         help="Dataset with which you would like to predict. You can specify either dataset name or id",
     )
     parser.add_argument(
@@ -70,7 +63,8 @@ def main() -> None:
     parser.add_argument(
         "-c",
         type=str,
-        required=True,
+        required=False, 
+        default='3d_fullres',
         help="nnU-Net configuration that should be used for prediction. Config must be located "
         "in the plans specified with -p",
     )
@@ -169,9 +163,9 @@ def main() -> None:
         type=str,
         default="cuda",
         required=False,
-        help="Use this to set the device the inference should run with. Available options are 'cuda' "
-        "(GPU), 'cpu' (CPU) and 'mps' (Apple M1/M2). Do NOT use this to set which GPU ID! "
-        "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_predict [...] instead!",
+        help="Use this to set the device the inference should run with. Available options are 'cuda' (GPU), "
+             "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN)."
+             "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_predict [...] instead!"
     )
     parser.add_argument(
         "--disable_progress_bar",
@@ -185,25 +179,47 @@ def main() -> None:
     args = parser.parse_args()
     args.f = [i if i == "all" else int(i) for i in args.f]
 
-    # data conversion
+    #### data conversion ####
     src_folder = args.i
     des_folder = args.o
 
-    prepare_data_folder(des_folder)
-    rename_dic, rename_back_dict = rename_and_copy_files(src_folder, des_folder)
+    # DELETE THIS ONCE THE CHANGE WORKS
+    # prepare_data_folder(des_folder)
+    # rename_dic, rename_back_dict = rename_and_copy_files(src_folder, des_folder)
 
-    datalist_file = os.path.join(des_folder, "renaming.json")
-    with open(datalist_file, "w", encoding="utf-8") as f:
-        json.dump(rename_dic, f, ensure_ascii=False, indent=4)
-    print(f"Renaming dic is saved to {datalist_file}")
+    # datalist_file = os.path.join(des_folder, "renaming.json")
+    # with open(datalist_file, "w", encoding="utf-8") as f:
+    #     json.dump(rename_dic, f, ensure_ascii=False, indent=4)
+    # print(f"Renaming dic is saved to {datalist_file}")
 
-    # model_folder = '../nnunet_results/Dataset901_Task901_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/'
-    model_folder = os.path.join(
-        args.m,
-        "Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/"
-        % (args.d, args.d),
-    )
+    # # model_folder = '../nnunet_results/Dataset901_Task901_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/'
+    # model_folder = os.path.join(
+    #     args.m,
+    #     "Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/"
+    #     % (args.d, args.d),
+    # )
 
+    # check if -i argument is a folder, list (csv), or a single file (nii.gz)
+     if os.path.isdir(args.i): # if args.i is a directory
+
+          src_folder=args.i 
+          prepare_data_folder(des_folder)
+          rename_dic, rename_back_dict  = rename_and_copy_files(src_folder, des_folder)
+          datalist_file = os.path.join(des_folder, "renaming.json")
+          with open(datalist_file, "w", encoding="utf-8") as f:
+               json.dump(rename_dic, f, ensure_ascii=False, indent=4)
+          print(f"Renaming dic is saved to {datalist_file}")
+
+     else: # if args.i is a file
+
+          if args.i.split('.')[-1] == 'csv': # if args.i is a .csv list
+               print('List input (.csv) detected!')
+               sys.exit() # don't do anything for now
+          elif args.i.split('.')[-2] == 'nii' & rgs.i.split('.')[-2] == 'gz': # if args.i is a .nii.gz file
+               print('Nifti file (.nii.gz) input detected!')
+               sys.exit() # don't do anything for now
+
+    model_folder = os.path.join('../nnunet_results', 'Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/' % (args.d, args.d))
     prepare_data_folder(args.o)
 
     # Check for invalid arguments - advise users to see nnUNetv2 documentation
@@ -227,6 +243,14 @@ def main() -> None:
     else:
         device = torch.device("mps")
 
+
+    # exports for nnunetv2 purposes
+    os.environ["nnUNet_raw"] = "/nnunet_raw/"
+    os.environ["nnUNet_preprocessed"] = "/nnunet_preprocessed"
+    os.environ["nnUNet_results"] = "/nnunet_results"
+
+    from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
+
     # Initialize nnUnetPredictor
     predictor = nnUNetPredictor(
         tile_step_size=args.step_size,
@@ -241,7 +265,9 @@ def main() -> None:
 
     # Retrieve the model and its weight
     predictor.initialize_from_trained_model_folder(
-        model_folder, args.f, checkpoint_name=args.chk
+        model_folder, 
+        args.f, 
+        checkpoint_name=args.chk
     )
 
     # Final prediction
