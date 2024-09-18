@@ -180,8 +180,11 @@ def main() -> None:
     args.f = [i if i == "all" else int(i) for i in args.f]
 
     #### data conversion ####
-    src_folder = args.i
-    des_folder = os.path.join(args.o,"/renamed_image/")
+    src_folder = args.i # input folder
+    if not os.path.exists(args.o): # create output folder if it does not exist
+        os.makedirs(args.o)
+    
+    des_folder = os.path.join(args.o,"/renamed_image")
 
     # DELETE THIS ONCE THE CHANGE WORKS
     # prepare_data_folder(des_folder)
