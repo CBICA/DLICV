@@ -184,7 +184,7 @@ def main() -> None:
     if not os.path.exists(args.o): # create output folder if it does not exist
         os.makedirs(args.o)
     
-    des_folder = os.path.join(args.o,"/renamed_image")
+    des_folder = os.path.join(args.o,"renamed_image")
 
     # DELETE THIS ONCE THE CHANGE WORKS
     # prepare_data_folder(des_folder)
@@ -220,6 +220,8 @@ def main() -> None:
             print('Nifti file (.nii.gz) input detected!')
             sys.exit() # don't do anything for now
 
+    #model_folder = 'nnunet_results/Dataset901_Task901_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/'
+    model_folder = os.path.join('nnunet_results', 'Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/' % (args.d, args.d))
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
         # HF download model
@@ -230,7 +232,6 @@ def main() -> None:
     else:
         print("Loading the model...")
 
-    model_folder = os.path.join('../nnunet_results', 'Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/' % (args.d, args.d))
     prepare_data_folder(args.o)
 
     # Check for invalid arguments - advise users to see nnUNetv2 documentation
