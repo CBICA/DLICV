@@ -8,6 +8,9 @@ from setuptools import find_packages, setup
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name="DLICV",
     version="1.0.0",
@@ -22,12 +25,7 @@ setup(
     url="https://github.com/CBICA/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
     python_requires=">=3.8",
-    install_requires=[
-        "torch>=2.1.2",
-        "argparse",
-        "nnunetv2==2.5.1",
-        "huggingface_hub"
-    ],
+    install_requires=required,
     entry_points={
         "console_scripts": ["DLICV = src.__main__:main"]
         },
