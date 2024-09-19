@@ -21,12 +21,12 @@ pip install -e .
 A pre-trained nnUNet model can be found at our [hugging face account](https://huggingface.co/nichart/DLICV) or at [DLICV-V2 v1.0.0 release](https://github.com/CBICA/DLMUSE/releases/tag/v1.0.0).
 Feel free to use it under the package's [licence](LICENCE)
 ```bash
-DLICV -i "input_folder" -o "output_folder" -d "id" -device cuda/cpu/mps
+DLICV -i "input_folder" -o "output_folder" -device cuda/cpu/mps
 ```
 
 You can perform one example test run using the test input folder by running
 ```bash
-DLICV -i test_input/DLICV_test_images -o test_input/DLICV_test_results -d 901 -device cuda
+DLICV -i test_input/DLICV_test_images -o test_input/DLICV_test_results -device cuda
 ```
 
 ## Contact
