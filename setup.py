@@ -27,7 +27,7 @@ setup(
     python_requires=">=3.8",
     install_requires=required,
     entry_points={
-        "console_scripts": ["DLICV = src.__main__:main"]
+        "console_scripts": ["DLICV = DLICV.__main__:main"]
         },
     classifiers=[
                     "Intended Audience :: Developers",
