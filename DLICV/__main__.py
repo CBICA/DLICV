@@ -161,9 +161,32 @@ def main() -> None:
         help="Set this flag to disable progress bar. Recommended for HPC environments (non interactive "
         "jobs)",
     )
+    parser.add_argument(
+        "--clear_cache",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Set this flag to clear any cached models before running. This is recommended if a previous download failed."
+    )
 
     args = parser.parse_args()
     args.f = [0]
+
+    if args.clear_cache:
+        shutil.rmtree(os.path.join(
+            Path(__file__).parent,
+            "nnunet_results"
+        ))
+        shutil.rmtree(os.path.join(
+            Path(__file__).parent,
+            ".cache"
+        ))
+        if not args.input or not args.output:
+            print("Cache cleared and missing either -i / -o. Exiting.")
+            sys.exit(0)
+
+    if not args.input or not args.output:
+        parser.error("The following arguments are required: -i, -o")
 
     # data conversion
     src_folder = args.i  # input folder
@@ -188,6 +211,16 @@ def main() -> None:
         "Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/"
         % (args.d, args.d),
     )
+
+    if args.clear_cache:
+        shutil.rmtree(os.path.join(
+            Path(__file__).parent,
+            "nnunet_results"
+        ))
+        shutil.rmtree(os.path.join(
+            Path(__file__).parent,
+            ".cache"
+        ))
 
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
