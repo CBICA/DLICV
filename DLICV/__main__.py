@@ -12,26 +12,62 @@ from .utils import prepare_data_folder, rename_and_copy_files
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
+# VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
+VERSION = 1.0
 
 def main() -> None:
+    prog="DLICV"
     parser = argparse.ArgumentParser(
-        description="Use this to run inference with nnU-Net. This function is used when "
-        "you want to manually specify a folder containing a trained nnU-Net "
-        "model. This is useful when the nnunet environment variables "
-        "(nnUNet_results) are not set."
+        prog=prog,
+        description="DLICV - Deep Learning Intra Cranial Volume.",
+        usage = """
+        DLICV v{VERSION}
+        ICV calculation for structural MRI data.
+        
+        Required arguments:
+            [-i, --in_dir]   The filepath of the input directory
+            [-o, --out_dir]  The filepath of the output directory
+        Optional arguments:
+            [-device]        cpu|cuda|mps - Depending on your system configuration (default: cuda)
+            [-h, --help]    Show this help message and exit.
+            [-V, --version] Show program's version number and exit.
+        EXAMPLE USAGE:
+            DLICV  -i           /path/to/input     \
+                   -o           /path/to/output    \
+                   -device      cpu|cuda|mps
+
+        """.format(VERSION=VERSION),
     )
+
+    # Required Arguments
     parser.add_argument(
         "-i",
         type=str,
         required=True,
-        help="input folder or list or image (nii.gz). Remember to use the correct channel numberings for your files (_0000 etc). File endings must be the same as the training dataset!",
+        help="[REQUIRED] Input folder with T1 sMRI images (nii.gz).",
     )
     parser.add_argument(
         "-o",
         type=str,
         required=True,
-        help="Output folder. If it does not exist it will be created. Predicted segmentations will "
-        "have the same name as their source images.",
+        help="[REQUIRED] Output folder. If it does not exist it will be created. Predicted segmentations will have the same name as their source images.",
+    )
+
+    # Optional Arguments
+    parser.add_argument(
+        "-device",
+        type=str,
+        default="cuda",
+        required=False,
+        help="[Recommended] Use this to set the device the inference should run with. Available options are 'cuda' (GPU), "
+        "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN).",
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=prog + ": v{VERSION}.".format(VERSION=VERSION),
+        help="Show the version and exit",
     )
     parser.add_argument(
         "-d",
@@ -145,15 +181,6 @@ def main() -> None:
         "to make these run on separate GPUs! Use CUDA_VISIBLE_DEVICES (google, yo!)",
     )
     parser.add_argument(
-        "-device",
-        type=str,
-        default="cuda",
-        required=False,
-        help="Use this to set the device the inference should run with. Available options are 'cuda' (GPU), "
-        "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN)."
-        "Use CUDA_VISIBLE_DEVICES=X nnUNetv2_predict [...] instead!",
-    )
-    parser.add_argument(
         "--disable_progress_bar",
         action="store_true",
         required=False,
@@ -166,7 +193,7 @@ def main() -> None:
         action="store_true",
         required=False,
         default=False,
-        help="Set this flag to clear any cached models before running. This is recommended if a previous download failed."
+        help="Set this flag to clear any cached models before running. This is recommended if a previous download failed.",
     )
 
     args = parser.parse_args()
@@ -181,11 +208,11 @@ def main() -> None:
             Path(__file__).parent,
             ".cache"
         ))
-        if not args.input or not args.output:
+        if not args.i or not args.o:
             print("Cache cleared and missing either -i / -o. Exiting.")
             sys.exit(0)
 
-    if not args.input or not args.output:
+    if not args.i or not args.o:
         parser.error("The following arguments are required: -i, -o")
 
     # data conversion
@@ -313,7 +340,7 @@ def main() -> None:
     if os.path.exists(des_folder):
         shutil.rmtree(des_folder)
 
-    print("Inference Process Done!")
+    print("DLICV Process Done!")
 
 
 if __name__ == "__main__":
