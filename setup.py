@@ -13,11 +13,11 @@ with open('requirements.txt') as f:
 
 setup(
     name="DLICV",
-    version="1.0.1",
+    version="1.0.2",
     description="DLICV - Deep Learning Intra Cranial Volume.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Guray Erus, Vishnu Bashyam, George Aidinis, Alexander Getka",
+    author="Guray Erus, Vishnu Bashyam, George Aidinis, Alexander Getka, Kyunglok Baik, Wu Di",
     author_email="software@cbica.upenn.edu",
     maintainer="George Aidinis, Spiros Maggioros, Kyunglok Baik, Alexander Getka",
     maintainer_email="aidinisg@pennmedicine.upenn.edu, Spiros.Maggioros@pennmedicine.upenn.edu, kyunglok.baik@pennmedicine.upenn.edu, alexander.getka@pennmedicine.upenn.edu",
