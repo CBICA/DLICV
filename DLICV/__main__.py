@@ -23,7 +23,7 @@ def main() -> None:
         usage = """
         DLICV v{VERSION}
         ICV calculation for structural MRI data.
-        
+
         Required arguments:
             [-i, --in_dir]   The filepath of the input directory
             [-o, --out_dir]  The filepath of the output directory
@@ -256,7 +256,7 @@ def main() -> None:
 
         from huggingface_hub import snapshot_download
         # local_src = Path(__file__).parent
-        snapshot_download(repo_id="nichart/DLICV", local_dir=local_src)
+        snapshot_download(repo_id="nichart/DLICV")
         print("DLICV model has been successfully downloaded!")
     else:
         print("Loading the model...")
