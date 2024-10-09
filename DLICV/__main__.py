@@ -255,8 +255,8 @@ def main() -> None:
         print("DLICV model not found, downloading...")
 
         from huggingface_hub import snapshot_download
-        # local_src = Path(__file__).parent
-        snapshot_download(repo_id="nichart/DLICV")
+        local_src = Path(__file__).parent
+        snapshot_download(repo_id="nichart/DLICV", local_dir=local_src)
         print("DLICV model has been successfully downloaded!")
     else:
         print("Loading the model...")
