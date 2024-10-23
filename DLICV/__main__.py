@@ -23,7 +23,7 @@ def main() -> None:
         usage = """
         DLICV v{VERSION}
         ICV calculation for structural MRI data.
-        
+
         Required arguments:
             [-i, --in_dir]   The filepath of the input directory
             [-o, --out_dir]  The filepath of the output directory
