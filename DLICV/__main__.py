@@ -1,9 +1,10 @@
 import argparse
 import json
 import os
-from pathlib import Path
 import shutil
+import sys
 import warnings
+from pathlib import Path
 
 import torch
 
@@ -15,12 +16,13 @@ warnings.simplefilter(action="ignore", category=UserWarning)
 # VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
 VERSION = 1.0
 
+
 def main() -> None:
-    prog="DLICV"
+    prog = "DLICV"
     parser = argparse.ArgumentParser(
         prog=prog,
         description="DLICV - Deep Learning Intra Cranial Volume.",
-        usage = """
+        usage="""
         DLICV v{VERSION}
         ICV calculation for structural MRI data.
 
@@ -36,18 +38,22 @@ def main() -> None:
                    -o           /path/to/output    \
                    -device      cpu|cuda|mps
 
-        """.format(VERSION=VERSION),
+        """.format(
+            VERSION=VERSION
+        ),
     )
 
     # Required Arguments
     parser.add_argument(
         "-i",
+        "--in_dir",
         type=str,
         required=True,
         help="[REQUIRED] Input folder with T1 sMRI images (nii.gz).",
     )
     parser.add_argument(
         "-o",
+        "out_dir",
         type=str,
         required=True,
         help="[REQUIRED] Output folder. If it does not exist it will be created. Predicted segmentations will have the same name as their source images.",
@@ -200,14 +206,8 @@ def main() -> None:
     args.f = [0]
 
     if args.clear_cache:
-        shutil.rmtree(os.path.join(
-            Path(__file__).parent,
-            "nnunet_results"
-        ))
-        shutil.rmtree(os.path.join(
-            Path(__file__).parent,
-            ".cache"
-        ))
+        shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
+        shutil.rmtree(os.path.join(Path(__file__).parent, ".cache"))
         if not args.i or not args.o:
             print("Cache cleared and missing either -i / -o. Exiting.")
             sys.exit(0)
@@ -240,14 +240,8 @@ def main() -> None:
     )
 
     if args.clear_cache:
-        shutil.rmtree(os.path.join(
-            Path(__file__).parent,
-            "nnunet_results"
-        ))
-        shutil.rmtree(os.path.join(
-            Path(__file__).parent,
-            ".cache"
-        ))
+        shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
+        shutil.rmtree(os.path.join(Path(__file__).parent, ".cache"))
 
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
@@ -255,6 +249,7 @@ def main() -> None:
         print("DLICV model not found, downloading...")
 
         from huggingface_hub import snapshot_download
+
         local_src = Path(__file__).parent
         snapshot_download(repo_id="nichart/DLICV", local_dir=local_src)
         print("DLICV model has been successfully downloaded!")
