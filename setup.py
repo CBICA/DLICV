@@ -23,7 +23,7 @@ setup(
     download_url="https://github.com/CBICA/DLICV/",
     url="https://github.com/CBICA/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=required,
     entry_points={"console_scripts": ["DLICV = DLICV.__main__:main"]},
     classifiers=[
