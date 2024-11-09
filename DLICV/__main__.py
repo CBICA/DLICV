@@ -14,7 +14,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
 # VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
-VERSION = 1.0
+VERSION = "1.0.3"
 
 
 def main() -> None:
@@ -53,7 +53,7 @@ def main() -> None:
     )
     parser.add_argument(
         "-o",
-        "out_dir",
+        "--out_dir",
         type=str,
         required=True,
         help="[REQUIRED] Output folder. If it does not exist it will be created. Predicted segmentations will have the same name as their source images.",
@@ -208,23 +208,23 @@ def main() -> None:
     if args.clear_cache:
         shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
         shutil.rmtree(os.path.join(Path(__file__).parent, ".cache"))
-        if not args.i or not args.o:
+        if not args.in_dir or not args.out_dir:
             print("Cache cleared and missing either -i / -o. Exiting.")
             sys.exit(0)
 
-    if not args.i or not args.o:
+    if not args.in_dir or not args.out_dir:
         parser.error("The following arguments are required: -i, -o")
 
     # data conversion
-    src_folder = args.i  # input folder
-    if not os.path.exists(args.o):  # create output folder if it does not exist
-        os.makedirs(args.o)
+    src_folder = args.in_dir  # input folder
+    if not os.path.exists(args.out_dir):  # create output folder if it does not exist
+        os.makedirs(args.out_dir)
 
-    des_folder = os.path.join(args.o, "renamed_image")
+    des_folder = os.path.join(args.out_dir, "renamed_image")
 
     # check if -i argument is a folder, list (csv), or a single file (nii.gz)
-    if os.path.isdir(args.i):  # if args.i is a directory
-        src_folder = args.i
+    if os.path.isdir(args.in_dir):  # if args.i is a directory
+        src_folder = args.in_dir
         prepare_data_folder(des_folder)
         rename_dic, rename_back_dict = rename_and_copy_files(src_folder, des_folder)
         datalist_file = os.path.join(des_folder, "renaming.json")
@@ -256,7 +256,7 @@ def main() -> None:
     else:
         print("Loading the model...")
 
-    prepare_data_folder(args.o)
+    prepare_data_folder(args.out_dir)
 
     # Check for invalid arguments - advise users to see nnUNetv2 documentation
     assert args.part_id < args.num_parts, "See nnUNetv2_predict -h."
@@ -311,7 +311,7 @@ def main() -> None:
     # Final prediction
     predictor.predict_from_files(
         des_folder,
-        args.o,
+        args.out_dir,
         save_probabilities=args.save_probabilities,
         overwrite=not args.continue_prediction,
         num_processes_preprocessing=args.npp,
@@ -322,7 +322,7 @@ def main() -> None:
     )
 
     # After prediction, convert the image name back to original
-    files_folder = args.o
+    files_folder = args.out_dir
 
     for filename in os.listdir(files_folder):
         if filename.endswith(".nii.gz"):
