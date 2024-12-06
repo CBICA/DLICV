@@ -53,7 +53,7 @@ def main() -> None:
     )
     parser.add_argument(
         "-o",
-        "out_dir",
+        "--out_dir",
         type=str,
         required=True,
         help="[REQUIRED] Output folder. If it does not exist it will be created. Predicted segmentations will have the same name as their source images.",
@@ -204,6 +204,8 @@ def main() -> None:
 
     args = parser.parse_args()
     args.f = [0]
+    args.i = args.in_dir
+    args.o = args.out_dir
 
     if args.clear_cache:
         shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
