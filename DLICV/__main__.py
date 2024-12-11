@@ -195,9 +195,26 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    args.f = [0]
 
-    run_pipeline(parser, args)
+    run_pipeline(
+        args.in_dir,
+        args.out_dir,
+        args.device,
+        args.clear_cache,
+        args.d,
+        args.part_id,
+        args.num_parts,
+        args.step_size,
+        args.disable_tta,
+        args.verbose,
+        args.disable_progress_bar,
+        args.chk,
+        args.save_probabilities,
+        args.continue_prediction,
+        args.npp,
+        args.nps,
+        args.prev_stage_predictions,
+    )
 
 
 if __name__ == "__main__":
