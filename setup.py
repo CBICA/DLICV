@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="DLICV",
-    version="1.0.3",
+    version="1.0.4",
     description="DLICV - Deep Learning Intra Cranial Volume.",
     long_description=long_description,
     long_description_content_type="text/markdown",
