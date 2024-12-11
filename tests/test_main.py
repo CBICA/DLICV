@@ -2,7 +2,6 @@
 import os
 import unittest
 
-from DLICV.__main__ import main
 from DLICV.utils import prepare_data_folder, rename_and_copy_files
 
 
