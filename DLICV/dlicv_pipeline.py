@@ -29,6 +29,20 @@ def run_pipeline(
     nps: int = 2,
     prev_stage_predictions: Optional[str] = None,
 ) -> None:
+    """
+    Run dlicv pipeline function
+    :param in_dir: The input directory
+    :type in_dir: str
+    :param out_dir: The output directory
+    :type out_dir: str
+    :param device: cpu/cuda/mps
+    :type device: str
+
+    Any other argument is not needed for 99% of you.
+    Devs should see the code
+
+    :rtype: None
+    """
     f = [0]
     if clear_cache:
         shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
