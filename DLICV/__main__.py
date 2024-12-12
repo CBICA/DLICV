@@ -7,7 +7,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
 # VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 
 def main() -> None:
