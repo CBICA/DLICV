@@ -21,7 +21,12 @@ setup(
     url="https://github.com/CBICA/DLICV/",
     packages=find_packages(exclude=["tests", ".github"]),
     python_requires=">=3.9",
-    install_requires=["torch<=2.2.1", "nnunetv2<=2.2.1", "argparse", "huggingface_hub"],
+    install_requires=[
+        "torch<=2.2.1",
+        "nnunetv==2.5.1",
+        "argparse",
+        "huggingface_hub"
+    ],
     entry_points={"console_scripts": ["DLICV = DLICV.__main__:main"]},
     classifiers=[
         "Intended Audience :: Developers",
