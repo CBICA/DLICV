@@ -31,11 +31,16 @@ def rename_and_copy_files(src_folder: str, des_folder: str) -> Tuple[dict, dict]
 
     for idx, filename in enumerate(files):
         old_name = os.path.join(src_folder, filename)
+        if not os.path.isfile(old_name):
+            continue
         rename_file = f"case_{idx: 04d}_0000.nii.gz"
         rename_back = f"case_{idx: 04d}.nii.gz"
         new_name = os.path.join(des_folder, rename_file)
-        shutil.copy2(old_name, new_name)
-        rename_dict[filename] = rename_file
-        rename_back_dict[rename_back] = "label_" + filename
+        try:
+            shutil.copy2(old_name, new_name)
+            rename_dict[filename] = rename_file
+            rename_back_dict[rename_back] = "label_" + filename
+        except Exception as e:
+            print(f"Error copying file '{filename}' to '{new_name}': {e}")
 
     return rename_dict, rename_back_dict
