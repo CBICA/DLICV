@@ -8,7 +8,7 @@ from DLICV.dlicv_pipeline import run_dlicv_pipeline
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
-VERSION = pkg_resources.require("NiChart_DLMUSE")[0].version
+VERSION = pkg_resources.require("DLICV")[0].version
 
 
 def main() -> None:
