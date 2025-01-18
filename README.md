@@ -31,6 +31,13 @@ Feel free to use it under the package's [licence](LICENCE)
 DLICV -i "input_folder" -o "output_folder" -device cpu
 ```
 
+## In-code usage
+```python
+from DLICV import run_dlicv_pipeline
+...
+run_dlicv_pipeline(in_dir, out_dir, device)
+```
+
 #### Troubleshooting model download failures
 Our model download process creates several deep directory structures. If you are on Windows and your model download process fails, it may be due to Windows file path limitations.
 
