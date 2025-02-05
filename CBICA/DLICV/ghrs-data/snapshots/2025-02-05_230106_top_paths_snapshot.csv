@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,26,13
+/CBICA/DLICV/releases,4,2
+/CBICA/DLICV/tree/main/DLICV,4,1
+/CBICA/DLICV/blob/main/DLICV/__main__.py,2,1
+/CBICA/DLICV/blob/main/DLICV/.gitattributes,1,1
+/CBICA/DLICV/blob/main/DLICV/__init__.py,1,1
+/CBICA/DLICV/blob/main/DLICV/README.md,1,1
+/CBICA/DLICV/blob/main/Dockerfile,1,1
+/CBICA/DLICV/blob/main/README.md,1,1
+/CBICA/DLICV/blob/main/tests/test_main.py,1,1
