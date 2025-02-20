@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,15,5
+/CBICA/DLICV/pulls,5,2
+/CBICA/DLICV/pull/11,4,2
+/CBICA/DLICV/blob/main/DLICV/__main__.py,3,1
+/CBICA/DLICV/tree/main/DLICV,3,1
+/CBICA/DLICV/blob/main/DLICV/__init__.py,2,1
+/CBICA/DLICV/blob/main/DLICV/utils.py,2,1
+/CBICA/DLICV/pull/11/files,2,1
+/CBICA/DLICV/tree/github-repo-stats,2,1
+/CBICA/DLICV/blob/github-repo-stats/CBICA/DLICV/latest-report/report.html,1,1
