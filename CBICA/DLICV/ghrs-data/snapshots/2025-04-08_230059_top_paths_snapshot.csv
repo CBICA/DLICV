@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,25,11
+/CBICA/DLICV/tree/main/tests,3,3
+/CBICA/DLICV/tree/main/DLICV,3,2
+/CBICA/DLICV/blob/main/DLICV/__main__.py,1,1
+/CBICA/DLICV/blob/main/README.md,1,1
+/CBICA/DLICV/blob/main/requirements.txt,1,1
+/CBICA/DLICV/blob/main/setup.cfg,1,1
+/CBICA/DLICV/blob/main/setup.py,1,1
+/CBICA/DLICV/blob/main/tests/test_main.py,1,1
+/CBICA/DLICV/issues,1,1
