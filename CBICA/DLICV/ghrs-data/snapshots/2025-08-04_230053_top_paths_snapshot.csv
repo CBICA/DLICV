@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,10,4
+/CBICA/DLICV/blob/main/DLICV/__main__.py,6,1
+/CBICA/DLICV/tree/main/DLICV,4,1
+/CBICA/DLICV/blob/main/tests/test_main.py,3,2
+/CBICA/DLICV/tree/main/tests,3,2
+/CBICA/DLICV/blob/main/DLICV/__init__.py,2,1
+/CBICA/DLICV/blob/main/setup.py,2,1
+/CBICA/DLICV/blob/main/DLICV/utils.py,1,1
+/CBICA/DLICV/tree/main,1,1
+/CBICA/DLICV/tree/main/.github/workflows,1,1
