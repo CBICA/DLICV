@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from .utils import prepare_data_folder, rename_and_copy_files
+from .utils import prepare_data_folder, rename_and_copy_files, set_random_seed
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -216,6 +216,9 @@ def main() -> None:
 
     if not args.i or not args.o:
         parser.error("The following arguments are required: -i, -o")
+
+    # Set random seed to a fixed value
+    set_random_seed(42)
 
     # data conversion
     src_folder = args.i  # input folder
