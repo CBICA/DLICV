@@ -24,7 +24,7 @@ Depending on your system configuration and supported CUDA version, you may need 
 A pre-trained nnUNet model can be found at our [hugging face account](https://huggingface.co/nichart/DLICV).
 Feel free to use it under the package's [licence](LICENCE)
 ```bash
-DLICV -i "input_folder" -o "output_folder" -device cpu
+DLICV -i "input_folder" -o "output_folder" -device cuda
 ```
 
 #### Troubleshooting model download failures

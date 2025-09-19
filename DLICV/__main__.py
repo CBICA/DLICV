@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from .utils import prepare_data_folder, rename_and_copy_files, set_random_seed
+from .utils import prepare_data_folder, rename_and_copy_files, set_random_seed, analyze_connected_components_for_icv
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -67,6 +67,13 @@ def main() -> None:
         required=False,
         help="[Recommended] Use this to set the device the inference should run with. Available options are 'cuda' (GPU), "
         "'cpu' (CPU) or 'mps' (Apple M-series chips supporting 3D CNN).",
+    )
+    parser.add_argument(
+        "--post_processing",
+        type=str,
+        required=False,
+        default="true",
+        help="Select the largest connected component. (Default: True)",
     )
     parser.add_argument(
         "-V",
@@ -201,11 +208,17 @@ def main() -> None:
         default=False,
         help="Set this flag to clear any cached models before running. This is recommended if a previous download failed.",
     )
+    # Set random seed to a fixed value
+    set_random_seed(42)
 
+    # input args
     args = parser.parse_args()
     args.f = [0]
     args.i = args.in_dir
     args.o = args.out_dir
+
+    if args.post_processing.upper() == 'TRUE':
+        import SimpleITK as sitk
 
     if args.clear_cache:
         shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
@@ -216,9 +229,6 @@ def main() -> None:
 
     if not args.i or not args.o:
         parser.error("The following arguments are required: -i, -o")
-
-    # Set random seed to a fixed value
-    set_random_seed(42)
 
     # data conversion
     src_folder = args.i  # input folder
@@ -328,7 +338,7 @@ def main() -> None:
         part_id=args.part_id,
     )
 
-    # After prediction, convert the image name back to original
+    # After prediction, convert the image name back to original, perform post processing
     files_folder = args.o
 
     for filename in os.listdir(files_folder):
@@ -338,12 +348,26 @@ def main() -> None:
                 os.path.join(files_folder, filename),
                 os.path.join(files_folder, original_name),
             )
+            # Enable post processing based on connected component analysis
+            if args.post_processing.upper() == 'TRUE':
+                fpath = os.path.join(files_folder, original_name)
+                # Make sure the file exists
+                if os.path.exists(fpath):
+                    mask_original = sitk.ReadImage(fpath)
+                    mask_component, true_mask_value = analyze_connected_components_for_icv(mask_original)
+                    print(f"True ICV mask value: {true_mask_value}, overwritting the output...")
+                    # mask_component = sitk.ConnectedComponent(mask_original)
+                    # mask_component = sitk.RelabelComponent(mask_component, sortByObjectSize=True)
+                    # mask_component = sitk.Equal(mask_component, analyze_connected_components_for_icv(mask_component))
+                    if mask_component.GetNumberOfPixels() > 10:
+                        sitk.WriteImage(mask_component, fpath)
+                    del mask_original, mask_component
+
     # Remove the (temporary) des_folder directory
     if os.path.exists(des_folder):
         shutil.rmtree(des_folder)
 
     print("DLICV Process Done!")
-
 
 if __name__ == "__main__":
     main()

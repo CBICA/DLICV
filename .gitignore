@@ -187,3 +187,7 @@ temp/
 # Prevent nnunet_results from going into production
 nnunet_results/
 src/nnunet_results/
+
+# Any workbenches
+notebook/
+Notebook/

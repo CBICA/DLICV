@@ -52,3 +52,69 @@ def set_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+import numpy as np
+import SimpleITK as sitk
+
+def analyze_connected_components_for_icv(binary_mask):
+    """Analyze all components and select brain based on multiple criteria"""
+    cc_image = sitk.ConnectedComponent(binary_mask)
+    
+    # Get label statistics
+    stats_filter = sitk.LabelShapeStatisticsImageFilter()
+    stats_filter.Execute(cc_image)
+    
+    components_info = []
+    sizes = []
+    
+    for label in stats_filter.GetLabels():
+        size = stats_filter.GetNumberOfPixels(label)
+        roundness = stats_filter.GetRoundness(label)
+        # Thresholding to exclude extremely small masks
+        if size > 200000:
+            components_info.append({
+                'label': label,
+                'size': size,
+                'roundness': roundness
+            })
+            sizes.append(size)
+    
+    print("Component Analysis:")
+    for i, comp in enumerate(components_info):
+        print(f"Component {comp['label']}: Size={comp['size']}, "
+              f"std Size={np.std(sizes)}, "
+              f"Roundness={comp['roundness']:.3f}")
+
+    if len(components_info) == 0:
+        raise("Failed to identify the true ICV mask based on connected component analysis.")
+    elif len(components_info) == 1:
+        return sitk.Equal(cc_image,1), 1
+
+    # Sort by size
+    components_info.sort(key=lambda x: x['size'], reverse=True)
+
+    # Get std of valid sizes
+    std_size = np.std(sizes)
+    avg_size = np.mean(sizes)
+
+    # select only ones within 99% conf intv
+    updated_components_info = []
+    for i, comp in enumerate(components_info):
+        if comp['size'] > (avg_size - 3 * std_size) and comp['size'] < (avg_size + 3 * std_size):
+            updated_components_info.append(comp)
+
+    components_info = updated_components_info
+
+    if len(components_info) > 1:
+        # Select top 2 by size
+        components_info = components_info[:2]
+        # Select one with the higher roundness
+        components_info.sort(key=lambda x: x['roundness'], reverse=True)
+    
+    try:
+        true_icv_mask = components_info[0]['label']
+        return sitk.Equal(cc_image,true_icv_mask), true_icv_mask
+    except:
+        raise("Failed to identify the true ICV mask based on connected component analysis.")
+
+    
