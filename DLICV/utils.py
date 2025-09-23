@@ -35,8 +35,8 @@ def rename_and_copy_files(src_folder: str, des_folder: str) -> Tuple[dict, dict]
 
     for idx, filename in enumerate(files):
         old_name = os.path.join(src_folder, filename)
-        rename_file = f"case_{idx: 04d}_0000.nii.gz"
-        rename_back = f"case_{idx: 04d}.nii.gz"
+        rename_file = f"case_{idx:04d}_0000.nii.gz"
+        rename_back = f"case_{idx:04d}.nii.gz"
         new_name = os.path.join(des_folder, rename_file)
         shutil.copy2(old_name, new_name)
         rename_dict[filename] = rename_file
@@ -88,7 +88,7 @@ def analyze_connected_components_for_icv(binary_mask):
     if len(components_info) == 0:
         raise("Failed to identify the true ICV mask based on connected component analysis.")
     elif len(components_info) == 1:
-        return sitk.Equal(cc_image,1), 1
+        return sitk.Equal(cc_image,components_info[0]['label']), components_info[0]['label']
 
     # Sort by size
     components_info.sort(key=lambda x: x['size'], reverse=True)
@@ -96,6 +96,8 @@ def analyze_connected_components_for_icv(binary_mask):
     # Get std of valid sizes
     std_size = np.std(sizes)
     avg_size = np.mean(sizes)
+
+    print(f"Avg Size: {avg_size}, Std Size: {std_size}")
 
     # select only ones within 99% conf intv
     updated_components_info = []

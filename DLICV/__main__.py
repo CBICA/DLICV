@@ -363,9 +363,9 @@ def main() -> None:
                         sitk.WriteImage(mask_component, fpath)
                     del mask_original, mask_component
 
-    # Remove the (temporary) des_folder directory
-    if os.path.exists(des_folder):
-        shutil.rmtree(des_folder)
+    # # Remove the (temporary) des_folder directory
+    # if os.path.exists(des_folder):
+    #     shutil.rmtree(des_folder)
 
     print("DLICV Process Done!")
 
