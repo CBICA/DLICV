@@ -12,7 +12,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="DLICV",
-    version="1.0.4",
+    version="1.0.5",
     description="DLICV - Deep Learning Intra Cranial Volume.",
     long_description=long_description,
     long_description_content_type="text/markdown",
