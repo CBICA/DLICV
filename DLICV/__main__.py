@@ -355,13 +355,19 @@ def main() -> None:
                 if os.path.exists(fpath):
                     mask_original = sitk.ReadImage(fpath)
                     mask_component, true_mask_value = analyze_connected_components_for_icv(mask_original)
-                    print(f"True ICV mask value: {true_mask_value}, overwritting the output...")
-                    # mask_component = sitk.ConnectedComponent(mask_original)
-                    # mask_component = sitk.RelabelComponent(mask_component, sortByObjectSize=True)
-                    # mask_component = sitk.Equal(mask_component, analyze_connected_components_for_icv(mask_component))
-                    if mask_component.GetNumberOfPixels() > 10:
-                        sitk.WriteImage(mask_component, fpath)
-                    del mask_original, mask_component
+                    
+                    if mask_component==0:
+                        del mask_original, mask_component
+                        print("CC Analysis failed for:",filename)
+                        continue
+                    else:
+                        print(f"True ICV mask value: {true_mask_value}, overwritting the output...")
+                        # mask_component = sitk.ConnectedComponent(mask_original)
+                        # mask_component = sitk.RelabelComponent(mask_component, sortByObjectSize=True)
+                        # mask_component = sitk.Equal(mask_component, analyze_connected_components_for_icv(mask_component))
+                        if mask_component.GetNumberOfPixels() > 10:
+                            sitk.WriteImage(mask_component, fpath)
+                        del mask_original, mask_component
 
     # Remove the (temporary) des_folder directory
     if os.path.exists(des_folder):

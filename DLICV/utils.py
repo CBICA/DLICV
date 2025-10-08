@@ -117,6 +117,8 @@ def analyze_connected_components_for_icv(binary_mask):
         true_icv_mask = components_info[0]['label']
         return sitk.Equal(cc_image,true_icv_mask), true_icv_mask
     except:
-        raise("Failed to identify the true ICV mask based on connected component analysis.")
+        #raise("Failed to identify the true ICV mask based on connected component analysis.")
+        # print("CC analysis failed. Keeping the original mask")
+        return 0,0
 
     
