@@ -356,7 +356,7 @@ def main() -> None:
                     mask_original = sitk.ReadImage(fpath)
                     mask_component, true_mask_value = analyze_connected_components_for_icv(mask_original)
                     
-                    if mask_component==0:
+                    if mask_component==None:
                         del mask_original, mask_component
                         print("CC Analysis failed for:",filename)
                         continue

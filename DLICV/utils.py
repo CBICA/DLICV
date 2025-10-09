@@ -119,6 +119,6 @@ def analyze_connected_components_for_icv(binary_mask):
     except:
         #raise("Failed to identify the true ICV mask based on connected component analysis.")
         # print("CC analysis failed. Keeping the original mask")
-        return 0,0
+        return None, None
 
     
