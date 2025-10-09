@@ -338,6 +338,7 @@ def main() -> None:
         part_id=args.part_id,
     )
 
+    print("Inference done. Renaming output files...")
     # After prediction, convert the image name back to original, perform post processing
     files_folder = args.o
 
@@ -348,6 +349,7 @@ def main() -> None:
                 os.path.join(files_folder, filename),
                 os.path.join(files_folder, original_name),
             )
+            print(f"Renaming case file { os.path.join(files_folder, filename) } back to {os.path.join(files_folder, original_name)}") 
             # Enable post processing based on connected component analysis
             if args.post_processing.upper() == 'TRUE':
                 fpath = os.path.join(files_folder, original_name)
@@ -368,6 +370,8 @@ def main() -> None:
                         if mask_component.GetNumberOfPixels() > 10:
                             sitk.WriteImage(mask_component, fpath)
                         del mask_original, mask_component
+                else:
+                    print(f"Connected component analysis: filepath {fpath} doesn't exist.") 
 
     # Remove the (temporary) des_folder directory
     if os.path.exists(des_folder):
