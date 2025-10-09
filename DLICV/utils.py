@@ -86,7 +86,9 @@ def analyze_connected_components_for_icv(binary_mask):
               f"Roundness={comp['roundness']:.3f}")
 
     if len(components_info) == 0:
-        raise("Failed to identify the true ICV mask based on connected component analysis.")
+        # raise("Failed to identify the true ICV mask based on connected component analysis.")
+        print("No connected component detected")
+        return None, None
     elif len(components_info) == 1:
         return sitk.Equal(cc_image,components_info[0]['label']), components_info[0]['label']
 
@@ -119,6 +121,7 @@ def analyze_connected_components_for_icv(binary_mask):
     except:
         #raise("Failed to identify the true ICV mask based on connected component analysis.")
         # print("CC analysis failed. Keeping the original mask")
+        print("CC analysis failed. Keeping the original mask")
         return None, None
 
     
