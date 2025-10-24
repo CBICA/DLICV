@@ -6,6 +6,8 @@ import sys
 import warnings
 from pathlib import Path
 
+import pandas as pd
+
 import torch
 
 from .utils import prepare_data_folder, rename_and_copy_files, set_random_seed, analyze_connected_components_for_icv
@@ -237,7 +239,7 @@ def main() -> None:
         help="If multiple nnUNetv2_predict exist, which one is this? IDs start with 0 can end with "
         "num_parts - 1. So when you submit 5 nnUNetv2_predict calls you need to set -num_parts "
         "5 and use -part_id 0, 1, 2, 3 and 4. Simple, right? Note: You are yourself responsible "
-        "to make these run on separate GPUs! Use CUDA_VISIBLE_DEVICES (google, yo!)",
+        "to make these run on separate GPUs! (Tip: Use CUDA_VISIBLE_DEVICES for NVIDIA GPUs).",
     )
     # Set random seed to a fixed value
     set_random_seed(42)
@@ -373,36 +375,60 @@ def main() -> None:
     # After prediction, convert the image name back to original, perform post processing
     files_folder = args.o
 
+    # Initialize for QC
+    qc_df = pd.DataFrame(columns=['file_path','file_name','QC_flag','QC_log'])
+
     for filename in os.listdir(files_folder):
         if filename.endswith(".nii.gz"):
             original_name = rename_back_dict[filename]
+            print(f"Renaming case file { os.path.join(files_folder, filename) } back to {os.path.join(files_folder, original_name)}") 
             os.rename(
                 os.path.join(files_folder, filename),
                 os.path.join(files_folder, original_name),
             )
-            print(f"Renaming case file { os.path.join(files_folder, filename) } back to {os.path.join(files_folder, original_name)}") 
+            
             # Enable post processing based on connected component analysis
             if args.post_processing.upper() == 'TRUE':
                 fpath = os.path.join(files_folder, original_name)
                 # Make sure the file exists
                 if os.path.exists(fpath):
                     mask_original = sitk.ReadImage(fpath)
-                    mask_component, true_mask_value = analyze_connected_components_for_icv(mask_original)
+                    qc_status=''
+                    mask_component, true_mask_value, qc_log = analyze_connected_components_for_icv(mask_original)
+
+                    if "SUCCESS" in qc_log.upper():
+                        qc_status = "Passed"
+                    else:
+                        qc_status = "Failed"
                     
+                    qc_df.loc[len(qc_df)] = {'file_path':fpath,
+                                             'file_name':filename,
+                                             'QC_flag':qc_status,
+                                             'QC_log':qc_log,}
+
                     if mask_component==None:
-                        del mask_original, mask_component
-                        print("CC Analysis failed for:",filename)
+                        #del mask_original, mask_component
+                        if os.path.exists(fpath) and args.drop_failed:
+                            os.remove(fpath)
                         continue
                     else:
                         print(f"True ICV mask value: {true_mask_value}, overwritting the output...")
-                        # mask_component = sitk.ConnectedComponent(mask_original)
-                        # mask_component = sitk.RelabelComponent(mask_component, sortByObjectSize=True)
-                        # mask_component = sitk.Equal(mask_component, analyze_connected_components_for_icv(mask_component))
-                        if mask_component.GetNumberOfPixels() > 10:
+                        if mask_component.GetNumberOfPixels() > 10000:
                             sitk.WriteImage(mask_component, fpath)
-                        del mask_original, mask_component
+                        #del mask_original, mask_component
+                
                 else:
-                    print(f"Connected component analysis: filepath {fpath} doesn't exist.") 
+                    print(f"Filepath {fpath} doesn't exist.") 
+                    qc_status = "Failed"
+                    qc_log = "Filepath doesn't exist"
+                    qc_df.loc[len(qc_df)] = {'file_path':fpath,
+                                             'file_name':filename,
+                                             'QC_flag':qc_status,
+                                             'QC_log':qc_log,}
+    print(qc_log)
+
+    if args.qc_out_path != "":
+        qc_df.to_csv(args.qc_out_path, index=False)
 
     # Remove the (temporary) des_folder directory
     if os.path.exists(des_folder):

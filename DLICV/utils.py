@@ -60,6 +60,8 @@ def analyze_connected_components_for_icv(binary_mask):
     """Analyze all components and select brain based on multiple criteria"""
     cc_image = sitk.ConnectedComponent(binary_mask)
     
+    qc_log = ""
+
     # Get label statistics
     stats_filter = sitk.LabelShapeStatisticsImageFilter()
     stats_filter.Execute(cc_image)
@@ -87,10 +89,12 @@ def analyze_connected_components_for_icv(binary_mask):
 
     if len(components_info) == 0:
         # raise("Failed to identify the true ICV mask based on connected component analysis.")
-        print("No connected component detected")
-        return None, None
+        qc_log = "No connected component detected"
+        print(qc_log)
+        return None, None, qc_log
     elif len(components_info) == 1:
-        return sitk.Equal(cc_image,components_info[0]['label']), components_info[0]['label']
+        qc_log = "Success. Single connected component."
+        return sitk.Equal(cc_image,components_info[0]['label']), components_info[0]['label'], qc_log
 
     # Sort by size
     components_info.sort(key=lambda x: x['size'], reverse=True)
@@ -117,11 +121,14 @@ def analyze_connected_components_for_icv(binary_mask):
     
     try:
         true_icv_mask = components_info[0]['label']
-        return sitk.Equal(cc_image,true_icv_mask), true_icv_mask
+        qc_log = "Success. Correct CC detected and overwritten."
+
+        return sitk.Equal(cc_image,true_icv_mask), true_icv_mask, qc_log
     except:
         #raise("Failed to identify the true ICV mask based on connected component analysis.")
         # print("CC analysis failed. Keeping the original mask")
-        print("CC analysis failed. Keeping the original mask")
-        return None, None
+        qc_log = "CC analysis failed. Keeping the original mask"
+        print(qc_log)
+        return None, None, qc_log
 
     
