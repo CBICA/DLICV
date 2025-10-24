@@ -47,6 +47,7 @@ def main() -> None:
     parser.add_argument(
         "-i",
         "--in_dir",
+        metavar='',
         type=str,
         required=True,
         help="[REQUIRED] Input folder with T1 sMRI images (nii.gz).",
@@ -54,6 +55,7 @@ def main() -> None:
     parser.add_argument(
         "-o",
         "--out_dir",
+        metavar='',
         type=str,
         required=True,
         help="[REQUIRED] Output folder. If it does not exist it will be created. Predicted segmentations will have the same name as their source images.",
@@ -62,6 +64,7 @@ def main() -> None:
     # Optional Arguments
     parser.add_argument(
         "-device",
+        metavar='',
         type=str,
         default="cuda",
         required=False,
@@ -70,10 +73,26 @@ def main() -> None:
     )
     parser.add_argument(
         "--post_processing",
+        metavar='',
         type=str,
         required=False,
         default="true",
         help="Select the largest connected component. (Default: True)",
+    )
+    parser.add_argument(
+        "--drop_failed",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Exlude all failed cases.",
+    )
+    parser.add_argument(
+        "--qc_out_path",
+        metavar='',
+        type=str,
+        required=False,
+        default="",
+        help="Output filepaths of all failed cases."
     )
     parser.add_argument(
         "-V",
@@ -82,38 +101,10 @@ def main() -> None:
         version=prog + ": v{VERSION}.".format(VERSION=VERSION),
         help="Show the version and exit",
     )
-    parser.add_argument(
-        "-d",
-        type=str,
-        required=False,
-        default="901",
-        help="Dataset with which you would like to predict. You can specify either dataset name or id",
-    )
-    parser.add_argument(
-        "-p",
-        type=str,
-        required=False,
-        default="nnUNetPlans",
-        help="Plans identifier. Specify the plans in which the desired configuration is located. "
-        "Default: nnUNetPlans",
-    )
-    parser.add_argument(
-        "-tr",
-        type=str,
-        required=False,
-        default="nnUNetTrainer",
-        help="What nnU-Net trainer class was used for training? Default: nnUNetTrainer",
-    )
-    parser.add_argument(
-        "-c",
-        type=str,
-        required=False,
-        default="3d_fullres",
-        help="nnU-Net configuration that should be used for prediction. Config must be located "
-        "in the plans specified with -p",
-    )
+    
     parser.add_argument(
         "-step_size",
+        metavar='',
         type=float,
         required=False,
         default=0.5,
@@ -146,54 +137,6 @@ def main() -> None:
         help="Continue an aborted previous prediction (will not overwrite existing files)",
     )
     parser.add_argument(
-        "-chk",
-        type=str,
-        required=False,
-        default="checkpoint_final.pth",
-        help="Name of the checkpoint you want to use. Default: checkpoint_final.pth",
-    )
-    parser.add_argument(
-        "-npp",
-        type=int,
-        required=False,
-        default=2,
-        help="Number of processes used for preprocessing. More is not always better. Beware of "
-        "out-of-RAM issues. Default: 2",
-    )
-    parser.add_argument(
-        "-nps",
-        type=int,
-        required=False,
-        default=2,
-        help="Number of processes used for segmentation export. More is not always better. Beware of "
-        "out-of-RAM issues. Default: 2",
-    )
-    parser.add_argument(
-        "-prev_stage_predictions",
-        type=str,
-        required=False,
-        default=None,
-        help="Folder containing the predictions of the previous stage. Required for cascaded models.",
-    )
-    parser.add_argument(
-        "-num_parts",
-        type=int,
-        required=False,
-        default=1,
-        help="Number of separate nnUNetv2_predict call that you will be making. Default: 1 (= this one "
-        "call predicts everything)",
-    )
-    parser.add_argument(
-        "-part_id",
-        type=int,
-        required=False,
-        default=0,
-        help="If multiple nnUNetv2_predict exist, which one is this? IDs start with 0 can end with "
-        "num_parts - 1. So when you submit 5 nnUNetv2_predict calls you need to set -num_parts "
-        "5 and use -part_id 0, 1, 2, 3 and 4. Simple, right? Note: You are yourself responsible "
-        "to make these run on separate GPUs! Use CUDA_VISIBLE_DEVICES (google, yo!)",
-    )
-    parser.add_argument(
         "--disable_progress_bar",
         action="store_true",
         required=False,
@@ -207,6 +150,94 @@ def main() -> None:
         required=False,
         default=False,
         help="Set this flag to clear any cached models before running. This is recommended if a previous download failed.",
+    )
+    parser.add_argument(
+        "-d",
+        metavar='',
+        type=str,
+        required=False,
+        default="901",
+        help="Dataset with which you would like to predict. You can specify either dataset name or id",
+    )
+    parser.add_argument(
+        "-p",
+        metavar='',
+        type=str,
+        required=False,
+        default="nnUNetPlans",
+        help="Plans identifier. Specify the plans in which the desired configuration is located. "
+        "Default: nnUNetPlans",
+    )
+    parser.add_argument(
+        "-tr",
+        metavar='',
+        type=str,
+        required=False,
+        default="nnUNetTrainer",
+        help="What nnU-Net trainer class was used for training? Default: nnUNetTrainer",
+    )
+    parser.add_argument(
+        "-c",
+        metavar='',
+        type=str,
+        required=False,
+        default="3d_fullres",
+        help="nnU-Net configuration that should be used for prediction. Config must be located "
+        "in the plans specified with -p",
+    )
+    parser.add_argument(
+        "-chk",
+        metavar='',
+        type=str,
+        required=False,
+        default="checkpoint_final.pth",
+        help="Name of the checkpoint you want to use. Default: checkpoint_final.pth",
+    )
+    parser.add_argument(
+        "-npp",
+        metavar='',
+        type=int,
+        required=False,
+        default=2,
+        help="Number of processes used for preprocessing. More is not always better. Beware of "
+        "out-of-RAM issues. Default: 2",
+    )
+    parser.add_argument(
+        "-nps",
+        metavar='',
+        type=int,
+        required=False,
+        default=2,
+        help="Number of processes used for segmentation export. More is not always better. Beware of "
+        "out-of-RAM issues. Default: 2",
+    )
+    parser.add_argument(
+        "-prev_stage_predictions",
+        metavar='',
+        type=str,
+        required=False,
+        default=None,
+        help="Folder containing the predictions of the previous stage. Required for cascaded models.",
+    )
+    parser.add_argument(
+        "-num_parts",
+        metavar='',
+        type=int,
+        required=False,
+        default=1,
+        help="Number of separate nnUNetv2_predict call that you will be making. Default: 1 (= this one "
+        "call predicts everything)",
+    )
+    parser.add_argument(
+        "-part_id",
+        metavar='',
+        type=int,
+        required=False,
+        default=0,
+        help="If multiple nnUNetv2_predict exist, which one is this? IDs start with 0 can end with "
+        "num_parts - 1. So when you submit 5 nnUNetv2_predict calls you need to set -num_parts "
+        "5 and use -part_id 0, 1, 2, 3 and 4. Simple, right? Note: You are yourself responsible "
+        "to make these run on separate GPUs! Use CUDA_VISIBLE_DEVICES (google, yo!)",
     )
     # Set random seed to a fixed value
     set_random_seed(42)
