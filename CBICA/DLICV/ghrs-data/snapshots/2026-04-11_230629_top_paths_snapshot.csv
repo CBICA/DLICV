@@ -1,0 +1,5 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,6,5
+/CBICA/DLICV/releases/tag/v1.0.1,3,1
+/CBICA/DLICV/actions/workflows/pre-commit.yml,1,1
+/CBICA/DLICV/labels,1,1
