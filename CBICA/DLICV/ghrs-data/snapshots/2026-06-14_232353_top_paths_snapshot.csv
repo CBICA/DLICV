@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/CBICA/DLICV,9,7
+/CBICA/DLICV/tree/main/tests,2,2
+/CBICA/DLICV/blob/main/requirements.txt,2,1
+/CBICA/DLICV/tree/main,2,1
+/CBICA/DLICV/actions,1,1
+/CBICA/DLICV/actions/runs/14685897225/workflow,1,1
+/CBICA/DLICV/blob/main/tests/test_main.py,1,1
+/CBICA/DLICV/blob/spiros-dev-2/.github/workflows/macos-build.yml,1,1
+/CBICA/DLICV/commits/main,1,1
+/CBICA/DLICV/pull/9/commits/33843c2ad055e482e3918f4e315fb1ea135a2ea8,1,1
