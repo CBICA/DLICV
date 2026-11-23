@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 import os
 import shutil
@@ -7,10 +8,21 @@ import warnings
 from pathlib import Path
 
 import pandas as pd
-
+import SimpleITK as sitk
 import torch
 
-from .utils import prepare_data_folder, rename_and_copy_files, set_random_seed, analyze_connected_components_for_icv
+from .utils import (
+    analyze_connected_components_for_icv,
+    get_num_cpus,
+    is_nifti,
+    output_name_for,
+    prepare_data_folder,
+    rename_and_copy_files,
+    set_random_seed,
+    validate_inputs,
+)
+
+QC_COLUMNS = ["file_path", "file_name", "QC_flag", "QC_log"]
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -94,7 +106,8 @@ def main() -> None:
         type=str,
         required=False,
         default="",
-        help="Output filepaths of all failed cases."
+        help="Filepath of the QC report (csv) listing the status of every case. "
+        "Default: <out_dir>/qc_report.csv",
     )
     parser.add_argument(
         "-V",
@@ -249,78 +262,65 @@ def main() -> None:
     args.f = [0]
     args.i = args.in_dir
     args.o = args.out_dir
+    post_processing = args.post_processing.upper() == "TRUE"
 
-    if args.post_processing.upper() == 'TRUE':
-        import SimpleITK as sitk
-
+    pkg_dir = Path(__file__).parent
     if args.clear_cache:
-        shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
-        shutil.rmtree(os.path.join(Path(__file__).parent, ".cache"))
+        shutil.rmtree(pkg_dir / "nnunet_results", ignore_errors=True)
+        shutil.rmtree(pkg_dir / ".cache", ignore_errors=True)
+        print("Cache cleared.")
         if not args.i or not args.o:
-            print("Cache cleared and missing either -i / -o. Exiting.")
+            print("Missing either -i / -o. Exiting.")
             sys.exit(0)
 
     if not args.i or not args.o:
         parser.error("The following arguments are required: -i, -o")
 
-    # data conversion
-    src_folder = args.i  # input folder
-    if not os.path.exists(args.o):  # create output folder if it does not exist
-        os.makedirs(args.o)
+    # Check for invalid arguments - advise users to see nnUNetv2 documentation
+    if args.part_id >= args.num_parts:
+        parser.error("-part_id must be smaller than -num_parts. See nnUNetv2_predict -h.")
+    if args.device not in ("cpu", "cuda", "mps"):
+        parser.error(
+            f"-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {args.device}."
+        )
 
-    des_folder = os.path.join(args.o, "renamed_image")
+    # -i can be a folder or a single NIfTI file
+    if not os.path.isdir(args.i) and not (os.path.isfile(args.i) and is_nifti(args.i)):
+        parser.error(f"-i must be a folder or a .nii/.nii.gz file. Got: {args.i}")
 
-    # check if -i argument is a folder, list (csv), or a single file (nii.gz)
-    if os.path.isdir(args.i):  # if args.i is a directory
-        src_folder = args.i
-        prepare_data_folder(des_folder)
-        rename_dic, rename_back_dict = rename_and_copy_files(src_folder, des_folder)
-        datalist_file = os.path.join(des_folder, "renaming.json")
-        with open(datalist_file, "w", encoding="utf-8") as f:
-            json.dump(rename_dic, f, ensure_ascii=False, indent=4)
-        print(f"Renaming dic is saved to {datalist_file}")
+    prepare_data_folder(args.o)
+    qc_out_path = args.qc_out_path or os.path.join(args.o, "qc_report.csv")
 
     model_folder = os.path.join(
-        Path(__file__).parent,
+        pkg_dir,
         "nnunet_results",
         "Dataset%s_Task%s_dlicv/nnUNetTrainer__nnUNetPlans__3d_fullres/"
         % (args.d, args.d),
     )
 
-    if args.clear_cache:
-        shutil.rmtree(os.path.join(Path(__file__).parent, "nnunet_results"))
-        shutil.rmtree(os.path.join(Path(__file__).parent, ".cache"))
-
     # Check if model exists. If not exist, download using HuggingFace
     if not os.path.exists(model_folder):
-        # HF download model
         print("DLICV model not found, downloading...")
-
         from huggingface_hub import snapshot_download
 
-        local_src = Path(__file__).parent
-        snapshot_download(repo_id="nichart/DLICV", local_dir=local_src)
+        snapshot_download(repo_id="nichart/DLICV", local_dir=pkg_dir)
         print("DLICV model has been successfully downloaded!")
     else:
         print("Loading the model...")
 
-    prepare_data_folder(args.o)
-
-    # Check for invalid arguments - advise users to see nnUNetv2 documentation
-    assert args.part_id < args.num_parts, "See nnUNetv2_predict -h."
-
-    assert args.device in [
-        "cpu",
-        "cuda",
-        "mps",
-    ], f"-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {args.device}."
+    # Device selection (fall back to CPU if the requested accelerator is unavailable)
+    if args.device == "cuda" and not torch.cuda.is_available():
+        print("WARNING: CUDA requested but not available. Falling back to CPU.")
+        args.device = "cpu"
+    elif args.device == "mps" and not (
+        hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
+    ):
+        print("WARNING: MPS requested but not available. Falling back to CPU.")
+        args.device = "cpu"
 
     if args.device == "cpu":
-        import multiprocessing
-
-        torch.set_num_threads(
-            multiprocessing.cpu_count() // 2
-        )  # use half of the threads (better for PC)
+        # use half of the available threads (better for PC / shared nodes)
+        torch.set_num_threads(max(1, get_num_cpus() // 2))
         device = torch.device("cpu")
     elif args.device == "cuda":
         # multithreading in torch doesn't help nnU-Netv2 if run on GPU
@@ -336,12 +336,87 @@ def main() -> None:
     os.environ["nnUNet_results"] = (
         "/nnunet_results"  # where model will be located (fetched from HF)
     )
+    # Required by some CUDA ops when deterministic algorithms are enabled
+    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 
+    qc_rows = []
+    des_folder = os.path.join(args.o, "renamed_image")
+    prepare_data_folder(des_folder)
+    try:
+        # With --continue_prediction, skip inputs whose final output already exists
+        skip = set()
+        if args.continue_prediction:
+            src_files = (
+                [os.path.basename(args.i)] if os.path.isfile(args.i) else os.listdir(args.i)
+            )
+            for fname in src_files:
+                if is_nifti(fname) and os.path.exists(
+                    os.path.join(args.o, output_name_for(fname))
+                ):
+                    skip.add(fname)
+            if skip:
+                print(f"Skipping {len(skip)} case(s) with existing outputs.")
+
+        rename_dic, rename_back_dict = rename_and_copy_files(args.i, des_folder, skip=skip)
+        datalist_file = os.path.join(des_folder, "renaming.json")
+        with open(datalist_file, "w", encoding="utf-8") as f:
+            json.dump(rename_dic, f, ensure_ascii=False, indent=4)
+        print(f"Renaming dic is saved to {datalist_file}")
+
+        # Drop unreadable inputs so a single corrupt file doesn't abort the whole run
+        invalid = validate_inputs(des_folder, rename_dic)
+        for original_name, err in invalid.items():
+            print(f"Invalid input {original_name}: {err}. Skipping.")
+            qc_rows.append(
+                {
+                    "file_path": os.path.join(args.o, output_name_for(original_name)),
+                    "file_name": original_name,
+                    "QC_flag": "Failed",
+                    "QC_log": f"Invalid input: {err}",
+                }
+            )
+            del rename_back_dict[rename_dic[original_name].replace("_0000.nii.gz", ".nii.gz")]
+
+        if rename_back_dict:
+            run_inference(args, device, model_folder, des_folder)
+        else:
+            print("No valid input images to process.")
+
+        print("Inference done. Renaming output files...")
+        qc_rows.extend(
+            postprocess_outputs(
+                args.o,
+                rename_back_dict,
+                {v.replace("_0000.nii.gz", ".nii.gz"): k for k, v in rename_dic.items()},
+                post_processing,
+                args.drop_failed,
+            )
+        )
+    finally:
+        # Remove the (temporary) des_folder directory
+        shutil.rmtree(des_folder, ignore_errors=True)
+
+    qc_df = pd.DataFrame(qc_rows, columns=QC_COLUMNS)
+    qc_dir = os.path.dirname(os.path.abspath(qc_out_path))
+    prepare_data_folder(qc_dir)
+    qc_df.to_csv(qc_out_path, index=False)
+
+    counts = qc_df["QC_flag"].value_counts()
+    print(
+        f"QC summary: {counts.get('Passed', 0)} passed, {counts.get('Failed', 0)} failed, "
+        f"{counts.get('Not checked', 0)} not checked. Report saved to {qc_out_path}"
+    )
+    print("DLICV Process Done!")
+
+
+def run_inference(args, device, model_folder: str, des_folder: str) -> None:
+    """Run nnU-Net prediction and release the model / GPU memory afterwards."""
     from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
-    # Keep the outputs consistent
-    torch.use_deterministic_algorithms(True)
 
-    # Initialize nnUnetPredictor
+    # Keep the outputs consistent (warn instead of crashing on ops without a
+    # deterministic implementation)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
     predictor = nnUNetPredictor(
         tile_step_size=args.step_size,
         use_gaussian=True,
@@ -352,89 +427,84 @@ def main() -> None:
         verbose_preprocessing=args.verbose,
         allow_tqdm=not args.disable_progress_bar,
     )
+    try:
+        predictor.initialize_from_trained_model_folder(
+            model_folder, args.f, checkpoint_name=args.chk
+        )
+        predictor.predict_from_files(
+            des_folder,
+            args.o,
+            save_probabilities=args.save_probabilities,
+            overwrite=not args.continue_prediction,
+            num_processes_preprocessing=args.npp,
+            num_processes_segmentation_export=args.nps,
+            folder_with_segs_from_prev_stage=args.prev_stage_predictions,
+            num_parts=args.num_parts,
+            part_id=args.part_id,
+        )
+    finally:
+        del predictor
+        gc.collect()
+        if device.type == "cuda":
+            torch.cuda.empty_cache()
 
-    # Retrieve the model and its weight
-    predictor.initialize_from_trained_model_folder(
-        model_folder, args.f, checkpoint_name=args.chk
-    )
 
-    # Final prediction
-    predictor.predict_from_files(
-        des_folder,
-        args.o,
-        save_probabilities=args.save_probabilities,
-        overwrite=not args.continue_prediction,
-        num_processes_preprocessing=args.npp,
-        num_processes_segmentation_export=args.nps,
-        folder_with_segs_from_prev_stage=args.prev_stage_predictions,
-        num_parts=args.num_parts,
-        part_id=args.part_id,
-    )
+def postprocess_outputs(
+    out_dir: str,
+    rename_back_dict: dict,
+    input_by_case: dict,
+    post_processing: bool,
+    drop_failed: bool,
+) -> list:
+    """Rename predictions back to their original names and run CC-based QC.
 
-    print("Inference done. Renaming output files...")
-    # After prediction, convert the image name back to original, perform post processing
-    files_folder = args.o
+    Iterates over the *expected* outputs so that cases nnU-Net failed to produce are
+    reported, and unrelated files in out_dir are left untouched.
+    """
+    qc_rows = []
+    for case_name, original_name in rename_back_dict.items():
+        src = os.path.join(out_dir, case_name)
+        fpath = os.path.join(out_dir, original_name)
+        row = {"file_path": fpath, "file_name": input_by_case.get(case_name, original_name)}
 
-    # Initialize for QC
-    qc_df = pd.DataFrame(columns=['file_path','file_name','QC_flag','QC_log'])
+        if not os.path.exists(src):
+            print(f"No segmentation produced for {original_name}.")
+            qc_rows.append({**row, "QC_flag": "Failed", "QC_log": "No segmentation produced"})
+            continue
 
-    for filename in os.listdir(files_folder):
-        if filename.endswith(".nii.gz"):
-            original_name = rename_back_dict[filename]
-            print(f"Renaming case file { os.path.join(files_folder, filename) } back to {os.path.join(files_folder, original_name)}") 
-            os.rename(
-                os.path.join(files_folder, filename),
-                os.path.join(files_folder, original_name),
+        print(f"Renaming case file {src} back to {fpath}")
+        os.replace(src, fpath)
+
+        if not post_processing:
+            qc_rows.append({**row, "QC_flag": "Not checked", "QC_log": "Post-processing disabled"})
+            continue
+
+        mask_original = mask_component = None
+        try:
+            mask_original = sitk.ReadImage(fpath)
+            mask_component, true_mask_value, qc_log = analyze_connected_components_for_icv(
+                mask_original
             )
-            
-            # Enable post processing based on connected component analysis
-            if args.post_processing.upper() == 'TRUE':
-                fpath = os.path.join(files_folder, original_name)
-                # Make sure the file exists
-                if os.path.exists(fpath):
-                    mask_original = sitk.ReadImage(fpath)
-                    qc_status=''
-                    mask_component, true_mask_value, qc_log = analyze_connected_components_for_icv(mask_original)
+            if mask_component is not None:
+                print(f"True ICV mask value: {true_mask_value}, overwriting the output...")
+                mask_component = sitk.Cast(mask_component, mask_original.GetPixelID())
+                sitk.WriteImage(mask_component, fpath)
+        except Exception as e:  # noqa: BLE001 - one bad mask must not abort the run
+            mask_component = None
+            qc_log = f"Post-processing error: {e}"
+            print(qc_log)
+        finally:
+            del mask_original
 
-                    if "SUCCESS" in qc_log.upper():
-                        qc_status = "Passed"
-                    else:
-                        qc_status = "Failed"
-                    
-                    qc_df.loc[len(qc_df)] = {'file_path':fpath,
-                                             'file_name':filename,
-                                             'QC_flag':qc_status,
-                                             'QC_log':qc_log,}
+        passed = mask_component is not None and "SUCCESS" in qc_log.upper()
+        qc_rows.append({**row, "QC_flag": "Passed" if passed else "Failed", "QC_log": qc_log})
+        del mask_component
 
-                    if mask_component==None:
-                        #del mask_original, mask_component
-                        if os.path.exists(fpath) and args.drop_failed:
-                            os.remove(fpath)
-                        continue
-                    else:
-                        print(f"True ICV mask value: {true_mask_value}, overwritting the output...")
-                        if mask_component.GetNumberOfPixels() > 10000:
-                            sitk.WriteImage(mask_component, fpath)
-                        #del mask_original, mask_component
-                
-                else:
-                    print(f"Filepath {fpath} doesn't exist.") 
-                    qc_status = "Failed"
-                    qc_log = "Filepath doesn't exist"
-                    qc_df.loc[len(qc_df)] = {'file_path':fpath,
-                                             'file_name':filename,
-                                             'QC_flag':qc_status,
-                                             'QC_log':qc_log,}
-    print(qc_log)
+        if not passed and drop_failed and os.path.exists(fpath):
+            os.remove(fpath)
 
-    if args.qc_out_path != "":
-        qc_df.to_csv(args.qc_out_path, index=False)
+    return qc_rows
 
-    # Remove the (temporary) des_folder directory
-    if os.path.exists(des_folder):
-        shutil.rmtree(des_folder)
-
-    print("DLICV Process Done!")
 
 if __name__ == "__main__":
     main()

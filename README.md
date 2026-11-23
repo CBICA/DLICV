@@ -27,6 +27,20 @@ Feel free to use it under the package's [licence](LICENCE)
 DLICV -i "input_folder" -o "output_folder" -device cuda
 ```
 
+`-i` can be a folder of `.nii.gz`/`.nii` images or a single image. Other files in the folder are ignored, and unreadable images are skipped without stopping the run. If the requested device (`cuda`/`mps`) is not available, DLICV falls back to CPU.
+
+#### QC report
+Each run writes a QC report to `output_folder/qc_report.csv`. Use `--qc_out_path` to save it somewhere else. It has one row per input image:
+
+| column | description |
+|---|---|
+| `file_path` | path of the output mask (`label_<input name>`) |
+| `file_name` | input image name |
+| `QC_flag` | `Passed`, `Failed`, or `Not checked` (when `--post_processing false`) |
+| `QC_log` | details, e.g. connected-component result, `Invalid input: ...`, `No segmentation produced` |
+
+Masks that fail the connected-component QC keep the raw prediction. Use `--drop_failed` to delete them instead.
+
 #### Troubleshooting model download failures
 Our model download process creates several deep directory structures. If you are on Windows and your model download process fails, it may be due to Windows file path limitations. 
 
