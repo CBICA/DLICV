@@ -191,3 +191,4 @@ src/nnunet_results/
 # Any workbenches
 notebook/
 Notebook/
+test_out/
